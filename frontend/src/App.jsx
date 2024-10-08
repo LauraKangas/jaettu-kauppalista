@@ -1,48 +1,26 @@
-// src/App.jsx
-
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import ItemLists from './ItemLists';
-import ListView from './ListView'; // Import the new ListView component
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ItemLists from './ItemLists'; 
+import ListView from './ListView'; 
+import fetchLists from './functions/lists/fetchLists'; 
 
 const App = () => {
   const [noteItems, setNoteItems] = useState([]);
 
-  const addNoteItem = (newItem) => {
-    setNoteItems([...noteItems, newItem]);
-  };
-
-  const deleteNoteItem = (id) => {
-    setNoteItems(noteItems.filter(item => item.id !== id));
-  };
-
-  const updateNoteItem = (updatedItem) => {
-    const updatedItems = noteItems.map(item =>
-      item.id === updatedItem.id ? updatedItem : item
-    );
-    setNoteItems(updatedItems);
-  };
+  useEffect(() => {
+    const getLists = async () => {
+      const lists = await fetchLists(); 
+      setNoteItems(lists);
+    };
+    getLists();
+  }, []);
 
   return (
     <Router>
       <div className="container">
         <Routes>
-          <Route path="/" element={
-            <ItemLists 
-              noteItems={noteItems} 
-              addNoteItem={addNoteItem} 
-              deleteNoteItem={deleteNoteItem} 
-              updateNoteItem={updateNoteItem} 
-            />
-          } />
-          <Route path="/list/:id" element={
-            <ListView 
-              noteItems={noteItems}
-              updateNoteItem={updateNoteItem}
-              deleteNoteItem={deleteNoteItem}
-            />
-          } />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/" element={<ItemLists noteItems={noteItems} setNoteItems={setNoteItems} />} />
+          <Route path="/list/:id" element={<ListView noteItems={noteItems} setNoteItems={setNoteItems} />} />
         </Routes>
       </div>
     </Router>
@@ -50,3 +28,4 @@ const App = () => {
 };
 
 export default App;
+

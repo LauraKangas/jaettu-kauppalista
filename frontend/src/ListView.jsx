@@ -1,89 +1,103 @@
-// src/ListView.jsx
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import ArrowBack from '@mui/icons-material/ArrowBack'; 
+import deleteList from './functions/lists/deleteList'; 
+import { db } from './utils/firebase/app';
+import { validateItemContent, checkForDuplicateItem } from './Validations'; 
 
-import React, { useState, useEffect } from 'react'; // Import useEffect for updating currentList
-import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
-import ListItem from './ListItem'; // Import ListItem component
+const ListView = ({ noteItems, setNoteItems }) => {
+  const { id } = useParams();
+  const [currentList, setCurrentList] = useState(null);
+  const [newItem, setNewItem] = useState('');
+  const navigate = useNavigate();
 
-const ListView = ({ noteItems, updateNoteItem, deleteNoteItem }) => {
-  const { id } = useParams(); // Get the list ID from the URL
-  const navigate = useNavigate(); // Hook to navigate programmatically
-  const [currentList, setCurrentList] = useState(null); // Initialize state for current list
-
-  // Update currentList whenever noteItems changes or on initial load
   useEffect(() => {
-    const foundList = noteItems.find(item => item.id === parseInt(id));
-    setCurrentList(foundList);
-  }, [noteItems, id]);
+    const foundList = noteItems.find(item => item.id === id);
+    if (foundList) {
+      setCurrentList(foundList);
+    } else {
+      console.error('List not found');
+    }
+  }, [id, noteItems]);
 
-  const handleDelete = (itemId) => {
-    if (!currentList) return; // Prevent errors if currentList is null
-    const updatedItems = currentList.items.filter(item => item.id !== itemId);
-    const updatedList = { ...currentList, items: updatedItems };
-    setCurrentList(updatedList);
-    updateNoteItem(updatedList); // Update parent state
+  const handleDeleteList = async () => {
+    try {
+      console.log('Deleting list with id:', id);
+      await deleteList(id);
+      setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting list:', error);
+    }
   };
 
-  const handleUpdate = (updatedItem) => {
-    if (!currentList) return; // Prevent errors if currentList is null
-    const updatedItems = currentList.items.map(item => item.id === updatedItem.id ? updatedItem : item);
-    const updatedList = { ...currentList, items: updatedItems };
-    setCurrentList(updatedList);
-    updateNoteItem(updatedList); // Update parent state
-  };
+  const handleAddItem = async () => {
+    if (!newItem) return;
 
-  const handleAddNewItem = () => {
-    if (!currentList) return; // Prevent errors if currentList is null
-    const newItemContent = prompt("Tuotenimi:"); // Prompt user for new item name
-    if (!newItemContent) {
-      alert("Tuotenimi ei voi olla tyhjä."); // Ensure input is valid
+    const validation = validateItemContent(newItem);
+    if (!validation.isValid) {
+      alert(validation.message);
       return;
     }
 
-    const newItem = {
-      id: Date.now(), // Use current timestamp as unique ID
-      content: newItemContent,
-    };
-
-    const updatedItems = [...currentList.items, newItem]; // Add new item to the list
-    const updatedList = { ...currentList, items: updatedItems };
-    setCurrentList(updatedList);
-    updateNoteItem(updatedList); // Update parent state
-  };
-
-  const handleDeleteList = () => {
-    if (window.confirm("Poistetaanko varmasti?")) {
-      deleteNoteItem(currentList.id); // Call delete function from props
-      navigate(-1); // Navigate back after deletion
+    if (!checkForDuplicateItem(currentList.items, newItem)) {
+      alert('Tämä tuote on jo listalla');
+      return;
     }
+
+    const updatedList = { ...currentList, items: [...currentList.items, newItem] };
+    await updateDoc(doc(db, 'lists', id), updatedList);
+    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+    setNewItem('');
   };
 
-  // Check if currentList is null and show a message or loading state
+  const handleDeleteItem = async (itemToDelete) => {
+    const updatedList = {
+      ...currentList,
+      items: currentList.items.filter(item => item !== itemToDelete)
+    };
+    await updateDoc(doc(db, 'lists', id), updatedList);
+    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+  };
+
   if (!currentList) {
-    return <div>List not found. Please check the URL or go back.</div>; // Custom message if list is not found
+    return <div>Loading...</div>;
   }
 
   return (
     <div>
-      <h1>Jaettu lista</h1>
-      <button onClick={() => navigate(-1)}>Takaisin</button> 
-      <h2>{currentList.content}</h2>
+      <button onClick={() => navigate('/')}>
+        <ArrowBack /> 
+      </button>
+      <h1>{currentList.content}</h1>
+      <input 
+        type="text" 
+        value={newItem} 
+        onChange={(e) => setNewItem(e.target.value)} 
+        placeholder="Uusi tuote" 
+      />
+      <button onClick={handleAddItem}>
+        <AddIcon /> 
+      </button>
       <ul>
-        {currentList.items && currentList.items.length > 0 ? ( // Ensure items exist before mapping
-          currentList.items.map(item => (
-            <ListItem 
-              key={item.id} 
-              item={item} 
-              deleteNoteItem={handleDelete} 
-            />
-          ))
-        ) : (
-          <li>Ei vielä tuotteita</li> 
-        )}
+        {currentList.items.map((item, index) => (
+          <li key={index}>
+            {item} 
+            <button onClick={() => handleDeleteItem(item)}>
+              <DeleteIcon /> 
+            </button>
+          </li>
+        ))}
       </ul>
-      <button onClick={handleAddNewItem}>Lisää tuote</button> {/* Button for adding new item */}
-      <button onClick={handleDeleteList}>Poista lista</button> {/* Button for deleting list */}
+      <button onClick={handleDeleteList}>
+        <DeleteIcon /> Poista lista
+      </button>
     </div>
   );
 };
 
 export default ListView;
+
