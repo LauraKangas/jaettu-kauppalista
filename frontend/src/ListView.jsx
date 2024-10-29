@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDocs, updateDoc, where } from 'firebase/firestore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBack from '@mui/icons-material/ArrowBack'; 
 import deleteList from './functions/lists/deleteList'; 
 import { db } from './utils/firebase/app';
 import { validateItemContent, checkForDuplicateItem } from './Validations'; 
+import fetchUser from './functions/users/fetchUser';
 
 const ListView = ({ noteItems, setNoteItems }) => {
   const { id } = useParams();
   const [currentList, setCurrentList] = useState(null);
   const [newItem, setNewItem] = useState('');
+  const [shareTo, setShareTo] = useState('')
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,7 +27,6 @@ const ListView = ({ noteItems, setNoteItems }) => {
 
   const handleDeleteList = async () => {
     try {
-      console.log('Deleting list with id:', id);
       await deleteList(id);
       setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
       navigate('/');
@@ -63,6 +64,14 @@ const ListView = ({ noteItems, setNoteItems }) => {
     setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
   };
 
+  const shareList = async () => {
+    const usersCollection = await getDocs(collection(db, 'users'), where('email', '==', shareTo))
+    await updateDoc(doc(db, 'lists', id), {
+      sharedTo: arrayUnion(usersCollection.docs.filter(item => item.data().email === shareTo)[0].id),
+    })
+    setShareTo('')
+  }
+
   if (!currentList) {
     return <div>Loading...</div>;
   }
@@ -92,6 +101,15 @@ const ListView = ({ noteItems, setNoteItems }) => {
           </li>
         ))}
       </ul>
+      <input
+        type="text"
+        value={shareTo}
+        onChange={e => setShareTo(e.target.value)}
+        placeholder="Jaa henkilölle..."
+      />
+      <button onClick={shareList}>
+        Jaa lista
+      </button>
       <button onClick={handleDeleteList}>
         <DeleteIcon /> Poista lista
       </button>
