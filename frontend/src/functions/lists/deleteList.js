@@ -1,13 +1,12 @@
-import { db } from '../../utils/firebase/app'; 
-import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../../utils/firebase/app'
+import { doc, deleteDoc } from 'firebase/firestore'
 
 const deleteList = async (listId) => {
   try {
-    const listRef = doc(db, 'lists', listId);
-    await deleteDoc(listRef);
+    await deleteDoc(doc(db, 'lists', listId))
   } catch (error) {
-    console.error("Error deleting list: ", error);
+    console.error("Error deleting list: ", error)
   }
-};
+}
 
-export default deleteList;
+export default deleteList
