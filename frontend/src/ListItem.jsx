@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { validateItemContent, checkForDuplicateItem, confirmDeletion } from './Validations';
 
@@ -37,3 +38,4 @@ const ListItem = ({ item, deleteNoteItem, updateNoteItem, noteItems }) => {
 };
 
 export default ListItem;
+*/
