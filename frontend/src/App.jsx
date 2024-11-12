@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from './utils/firebase/app'; 
 import ItemLists from './ItemLists'; 
 import ListView from './ListView'; 
 import fetchLists from './functions/lists/fetchLists'; 
@@ -8,11 +10,14 @@ const App = () => {
   const [noteItems, setNoteItems] = useState([]);
 
   useEffect(() => {
-    const getLists = async () => {
-      const lists = await fetchLists(); 
+    const fetchLists = async () => {
+      const listsCollection = collection(db, 'lists');
+      const listSnapshot = await getDocs(listsCollection);
+      const lists = listSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setNoteItems(lists);
     };
-    getLists();
+
+    fetchLists();
   }, []);
 
   return (
