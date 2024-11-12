@@ -94,25 +94,6 @@ const ListView = ({ noteItems, setNoteItems }) => {
     }
   };
 
-  const shareList = async () => {
-    try {
-      const q = query(collection(db, 'users'), where('email', '==', shareTo));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        await updateDoc(doc(db, 'lists', id), {
-          sharedTo: arrayUnion(userDoc.id),
-        });
-        setShareTo('');
-        alert(`List shared with ${shareTo}`);
-      } else {
-        alert("User not found");
-      }
-    } catch (error) {
-      console.error("Error sharing list:", error);
-    }
-  };
-
   const handleCheckboxChange = async (itemToToggle) => {
     const updatedItems = currentList.items.map(item =>
       item.content === itemToToggle.content ? { ...item, isChecked: !item.isChecked } : item
@@ -168,19 +149,6 @@ const ListView = ({ noteItems, setNoteItems }) => {
         <IconButton onClick={handleAddItem} color="primary">
           <AddIcon />
         </IconButton>
-      </Stack>
-
-      <Stack direction="row" spacing={1} alignItems="center" mt={2} mb={2}>
-        <TextField
-          label="Jaa henkilölle..."
-          variant="outlined"
-          size="small"
-          value={shareTo}
-          onChange={e => setShareTo(e.target.value)}
-        />
-        <Button variant="contained" onClick={shareList}>
-          Jaa lista
-        </Button>
       </Stack>
 
       <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDeleteList} fullWidth>

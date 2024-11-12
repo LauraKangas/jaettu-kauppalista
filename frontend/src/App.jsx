@@ -5,23 +5,22 @@ import ListView from './ListView';
 import fetchLists from './functions/lists/fetchLists'; 
 
 const App = () => {
-  const [items, setItems] = useState([]);
-  const [uid, setUid] = useState(null)
+  const [noteItems, setNoteItems] = useState([]);
 
   useEffect(() => {
-    (async () => {
-      if (uid) {
-        setItems(await fetchLists(uid));
-      }
-    })()
-  }, [uid]);
+    const getLists = async () => {
+      const lists = await fetchLists(); 
+      setNoteItems(lists);
+    };
+    getLists();
+  }, []);
 
   return (
     <Router>
       <div className="container">
         <Routes>
-          <Route path="/" element={<ItemLists noteItems={items} setNoteItems={setItems} uid={uid} setUid={setUid} />} />
-          <Route path="/list/:id" element={<ListView noteItems={items} setNoteItems={setItems} />} />
+          <Route path="/" element={<ItemLists noteItems={noteItems} setNoteItems={setNoteItems} />} />
+          <Route path="/list/:id" element={<ListView noteItems={noteItems} setNoteItems={setNoteItems} />} />
         </Routes>
       </div>
     </Router>
