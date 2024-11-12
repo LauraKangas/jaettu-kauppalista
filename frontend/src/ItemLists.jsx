@@ -11,37 +11,32 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
 
   const handleCreateList = async () => {
     if (!newListContent) return; 
-
+  
     const validation = validateItemContent(newListContent);
     if (!validation.isValid) {
       alert(validation.message);
       return;
     }
-
-    if (!checkForDuplicateItem(noteItems, newListContent)) {
-      alert('Tämä on jo listalla');
-      return;
-    }
-
+      
     const newList = { content: newListContent, items: [] }; 
     const listsCollection = collection(db, 'lists'); 
-
+  
     const docRef = await addDoc(listsCollection, newList); 
-    setNoteItems(prevItems => [...prevItems, { id: docRef.id, ...newList }]); 
-
+    setNoteItems(prevItems => Array.isArray(prevItems) ? [...prevItems, { id: docRef.id, ...newList }] : [{ id: docRef.id, ...newList }]);
+  
     setNewListContent(''); 
   };
 
   const handleDeleteList = async (id) => {
     await deleteDoc(doc(db, 'lists', id));
-    setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.filter(item => item.id !== id) : []);
   };
 
   return (
     <div>
       <h1>Omat listat</h1>
       <ul>
-        {noteItems.map((item) => (
+        {noteItems && noteItems.map((item) => (
           <li key={item.id}>
             <Link to={`/list/${item.id}`}>{item.content}</Link>
             <button onClick={() => handleDeleteList(item.id)}>
@@ -65,3 +60,4 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
 };
 
 export default ItemLists;
+

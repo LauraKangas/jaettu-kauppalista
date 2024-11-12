@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { arrayUnion, collection, doc, getDocs, updateDoc, where, query } from 'firebase/firestore';
+import { updateDoc, doc } from 'firebase/firestore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBack from '@mui/icons-material/ArrowBack';
@@ -16,11 +16,10 @@ const ListView = ({ noteItems, setNoteItems }) => {
   const { id } = useParams();
   const [currentList, setCurrentList] = useState(null);
   const [newItem, setNewItem] = useState('');
-  const [shareTo, setShareTo] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const foundList = noteItems.find(item => item.id === id);
+    const foundList = Array.isArray(noteItems) ? noteItems.find(item => item.id === id) : null;
     if (foundList) {
       setCurrentList(foundList);
     } else {
@@ -31,7 +30,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
   const handleDeleteList = async () => {
     try {
       await deleteList(id);
-      setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
+      setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.filter(item => item.id !== id) : []);
       navigate('/');
     } catch (error) {
       console.error('Error deleting list:', error);
@@ -58,7 +57,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
     };
     
     await updateDoc(doc(db, 'lists', id), updatedList);
-    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
     setNewItem('');
   };
 
@@ -68,7 +67,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
       items: currentList.items.filter(item => item.content !== itemToDelete.content)
     };
     await updateDoc(doc(db, 'lists', id), updatedList);
-    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
   };
 
   const handleEditItem = async (itemToEdit) => {
@@ -90,7 +89,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
       );
       const updatedList = { ...currentList, items: updatedItems };
       await updateDoc(doc(db, 'lists', id), updatedList);
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+      setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
     }
   };
 
@@ -101,7 +100,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
     const updatedList = { ...currentList, items: updatedItems };
     
     await updateDoc(doc(db, 'lists', id), updatedList);
-    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
   };
 
   if (!currentList) {
@@ -159,3 +158,4 @@ const ListView = ({ noteItems, setNoteItems }) => {
 };
 
 export default ListView;
+
