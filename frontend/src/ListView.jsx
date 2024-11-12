@@ -17,6 +17,8 @@ const ListView = ({ noteItems, setNoteItems }) => {
   const { id } = useParams();
   const [currentList, setCurrentList] = useState(null);
   const [newItem, setNewItem] = useState('');
+  const [editingItem, setEditingItem] = useState(null); 
+  const [editedItemContent, setEditedItemContent] = useState(''); 
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar(); 
 
@@ -72,27 +74,42 @@ const ListView = ({ noteItems, setNoteItems }) => {
     setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
   };
 
-  const handleEditItem = async (itemToEdit) => {
-    const newContent = prompt("Päivitä tuotteen sisältö", itemToEdit.content);
-    if (newContent && newContent !== itemToEdit.content) {
-      const validation = validateItemContent(newContent);
-      if (!validation.isValid) {
-        enqueueSnackbar(validation.message, { variant: 'error' });
-        return;
-      }
+  const handleEditItem = (itemToEdit) => {
+    setEditingItem(itemToEdit); 
+    setEditedItemContent(itemToEdit.content); 
+  };
 
-      if (!checkForDuplicateItem(currentList.items.map(i => i.content), newContent)) {
-        enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' }); 
-        return;
-      }
+  const handleCancelEdit = () => {
+    setEditingItem(null); 
+    setEditedItemContent(''); 
+  };
 
-      const updatedItems = currentList.items.map(item =>
-        item.content === itemToEdit.content ? { ...item, content: newContent } : item
-      );
-      const updatedList = { ...currentList, items: updatedItems };
-      await updateDoc(doc(db, 'lists', id), updatedList);
-      setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
+  const handleSaveEditedItem = async () => {
+    if (!editedItemContent) {
+      enqueueSnackbar('Tuotteen sisältö ei voi olla tyhjä.', { variant: 'error' });
+      return;
     }
+
+    const validation = validateItemContent(editedItemContent);
+    if (!validation.isValid) {
+      enqueueSnackbar(validation.message, { variant: 'error' });
+      return;
+    }
+
+    if (!checkForDuplicateItem(currentList.items.map(i => i.content), editedItemContent)) {
+      enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
+      return;
+    }
+
+    const updatedItems = currentList.items.map(item =>
+      item.content === editingItem.content ? { ...item, content: editedItemContent } : item
+    );
+    const updatedList = { ...currentList, items: updatedItems };
+
+    await updateDoc(doc(db, 'lists', id), updatedList);
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
+    setEditingItem(null); 
+    setEditedItemContent('');
   };
 
   const handleCheckboxChange = async (itemToToggle) => {
@@ -125,12 +142,32 @@ const ListView = ({ noteItems, setNoteItems }) => {
               checked={item.isChecked || false}
               onChange={() => handleCheckboxChange(item)}
             />
-            <span style={{ flexGrow: 1, marginLeft: '8px', textDecoration: item.isChecked ? 'line-through' : 'none' }}>
-              {item.content}
-            </span>
-            <Button onClick={() => handleEditItem(item)}>
-              <EditIcon />
-            </Button>
+            
+            {editingItem && editingItem.content === item.content ? (
+              <TextField
+                autoFocus
+                size="small"
+                value={editedItemContent}
+                onChange={(e) => setEditedItemContent(e.target.value)}
+                onBlur={handleSaveEditedItem} 
+                onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()} 
+              />
+            ) : (
+              <span style={{ flexGrow: 1, marginLeft: '8px', textDecoration: item.isChecked ? 'line-through' : 'none' }}>
+                {item.content}
+              </span>
+            )}
+            
+            {!editingItem || editingItem.content !== item.content ? (
+              <Button onClick={() => handleEditItem(item)}>
+                <EditIcon />
+              </Button>
+            ) : (
+              <>
+                <Button onClick={handleSaveEditedItem}>Save</Button>
+                <Button onClick={handleCancelEdit}>Cancel</Button>
+              </>
+            )}
 
             <Button onClick={() => handleDeleteItem(item)}>
               <DeleteIcon />
@@ -140,12 +177,17 @@ const ListView = ({ noteItems, setNoteItems }) => {
       </ul>
       
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-        <TextField
-          label="Uusi tuote"
-          size="small"
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-        />
+      <TextField
+        label="Uusi tuote"
+        size="small"
+        value={newItem}
+        onChange={(e) => setNewItem(e.target.value)} 
+        onKeyPress={(e) => {
+          if (e.key === 'Enter') {
+            handleAddItem(); 
+          }
+        }}
+      />
         <Button onClick={handleAddItem}>
           <AddIcon />
         </Button>
