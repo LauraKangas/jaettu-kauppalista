@@ -8,24 +8,26 @@ import EditIcon from '@mui/icons-material/Edit';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { Typography, TextField, Button, Stack } from '@mui/material';
-import deleteList from './functions/lists/deleteList';
+import { useSnackbar } from 'notistack'; 
 import { db } from './utils/firebase/app';
-import { validateItemContent, checkForDuplicateItem } from './Validations';
+import deleteList from './functions/lists/deleteList';
+import { validateItemContent, checkForDuplicateItem } from './validations';
 
 const ListView = ({ noteItems, setNoteItems }) => {
   const { id } = useParams();
   const [currentList, setCurrentList] = useState(null);
   const [newItem, setNewItem] = useState('');
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar(); 
 
   useEffect(() => {
     const foundList = Array.isArray(noteItems) ? noteItems.find(item => item.id === id) : null;
     if (foundList) {
       setCurrentList(foundList);
     } else {
-      console.error('List not found');
+      enqueueSnackbar('Listaa ei löydy.', { variant: 'error' }); 
     }
-  }, [id, noteItems]);
+  }, [id, noteItems, enqueueSnackbar]);
 
   const handleDeleteList = async () => {
     try {
@@ -33,7 +35,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
       setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.filter(item => item.id !== id) : []);
       navigate('/');
     } catch (error) {
-      console.error('Error deleting list:', error);
+      enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' }); 
     }
   };
 
@@ -42,12 +44,12 @@ const ListView = ({ noteItems, setNoteItems }) => {
 
     const validation = validateItemContent(newItem);
     if (!validation.isValid) {
-      alert(validation.message);
+      enqueueSnackbar(validation.message, { variant: 'error' }); 
       return;
     }
 
     if (!checkForDuplicateItem(currentList.items.map(i => i.content), newItem)) {
-      alert('Tämä tuote on jo listalla');
+      enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' }); 
       return;
     }
 
@@ -75,12 +77,12 @@ const ListView = ({ noteItems, setNoteItems }) => {
     if (newContent && newContent !== itemToEdit.content) {
       const validation = validateItemContent(newContent);
       if (!validation.isValid) {
-        alert(validation.message);
+        enqueueSnackbar(validation.message, { variant: 'error' });
         return;
       }
 
       if (!checkForDuplicateItem(currentList.items.map(i => i.content), newContent)) {
-        alert('Tämä tuote on jo listalla');
+        enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' }); 
         return;
       }
 
@@ -157,4 +159,3 @@ const ListView = ({ noteItems, setNoteItems }) => {
 };
 
 export default ListView;
-

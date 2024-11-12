@@ -2,35 +2,49 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, doc, deleteDoc } from 'firebase/firestore'; 
 import { db } from './utils/firebase/app'; 
-import { validateItemContent, checkForDuplicateItem } from './Validations'; 
+import { validateItemContent, checkForDuplicateItem } from './validations'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { Button } from '@mui/material';
+import { useSnackbar } from 'notistack'; 
 
 const ItemLists = ({ noteItems, setNoteItems }) => {
   const [newListContent, setNewListContent] = useState('');
-
+  const { enqueueSnackbar } = useSnackbar(); 
   const handleCreateList = async () => {
-    if (!newListContent) return; 
+    if (!newListContent) {
+      enqueueSnackbar('Listan nimi ei voi olla tyhjä.', { variant: 'error' }); 
+      return; 
+    }
   
     const validation = validateItemContent(newListContent);
     if (!validation.isValid) {
-      alert(validation.message);
+      enqueueSnackbar(validation.message, { variant: 'error' }); 
       return;
     }
-      
+    
     const newList = { content: newListContent, items: [] }; 
     const listsCollection = collection(db, 'lists'); 
   
-    const docRef = await addDoc(listsCollection, newList); 
-    setNoteItems(prevItems => Array.isArray(prevItems) ? [...prevItems, { id: docRef.id, ...newList }] : [{ id: docRef.id, ...newList }]);
+    try {
+      const docRef = await addDoc(listsCollection, newList); 
+      setNoteItems(prevItems => Array.isArray(prevItems) ? [...prevItems, { id: docRef.id, ...newList }] : [{ id: docRef.id, ...newList }]);
+  
+    } catch (error) {
+      enqueueSnackbar('Virhe luodessa listaa. Yritä hetken kuluttua uudelleen.', { variant: 'error' }); 
+    }
   
     setNewListContent(''); 
   };
 
   const handleDeleteList = async (id) => {
-    await deleteDoc(doc(db, 'lists', id));
-    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.filter(item => item.id !== id) : []);
+    try {
+      await deleteDoc(doc(db, 'lists', id));
+      setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.filter(item => item.id !== id) : []);
+
+    } catch (error) {
+      enqueueSnackbar('Virhe poistaessa listaa. Yritä hetken kuluttua uudelleen.', { variant: 'error' }); 
+    }
   };
 
   return (
