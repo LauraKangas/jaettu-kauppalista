@@ -5,6 +5,7 @@ import { db } from './utils/firebase/app';
 import { validateItemContent, checkForDuplicateItem } from './Validations'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { Button } from '@mui/material';
 
 const ItemLists = ({ noteItems, setNoteItems }) => {
   const [newListContent, setNewListContent] = useState('');
@@ -39,9 +40,9 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
         {noteItems && noteItems.map((item) => (
           <li key={item.id}>
             <Link to={`/list/${item.id}`}>{item.content}</Link>
-            <button onClick={() => handleDeleteList(item.id)}>
+            <Button onClick={() => handleDeleteList(item.id)}>
               <DeleteIcon /> 
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -52,12 +53,13 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
         onChange={(e) => setNewListContent(e.target.value)}
         placeholder="kirjoita listan nimi"
       />
-      <button onClick={handleCreateList}>
+      <Button onClick={handleCreateList}>
         <AddIcon /> 
-      </button>
+      </Button>
     </div>
   );
 };
 
 export default ItemLists;
+
 

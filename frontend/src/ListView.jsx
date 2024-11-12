@@ -109,9 +109,9 @@ const ListView = ({ noteItems, setNoteItems }) => {
 
   return (
     <div>
-      <IconButton onClick={() => navigate('/')}>
+      <Button onClick={() => navigate('/')}>
         <ArrowBack />
-      </IconButton>
+      </Button>
       <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
         {currentList.content}
       </Typography>
@@ -120,19 +120,19 @@ const ListView = ({ noteItems, setNoteItems }) => {
         {currentList.items.map((item, index) => (
           <li key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
             <Checkbox 
-              color="primary"
               checked={item.isChecked || false}
               onChange={() => handleCheckboxChange(item)}
             />
             <span style={{ flexGrow: 1, marginLeft: '8px', textDecoration: item.isChecked ? 'line-through' : 'none' }}>
               {item.content}
             </span>
-            <IconButton onClick={() => handleEditItem(item)} color="primary">
+            <Button onClick={() => handleEditItem(item)}>
               <EditIcon />
-            </IconButton>
-            <IconButton onClick={() => handleDeleteItem(item)} color="secondary">
+            </Button>
+
+            <Button onClick={() => handleDeleteItem(item)}>
               <DeleteIcon />
-            </IconButton>
+            </Button>
           </li>
         ))}
       </ul>
@@ -140,17 +140,16 @@ const ListView = ({ noteItems, setNoteItems }) => {
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <TextField
           label="Uusi tuote"
-          variant="outlined"
           size="small"
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
         />
-        <IconButton onClick={handleAddItem} color="primary">
+        <Button onClick={handleAddItem}>
           <AddIcon />
-        </IconButton>
+        </Button>
       </Stack>
 
-      <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDeleteList} fullWidth>
+      <Button startIcon={<DeleteIcon />} onClick={handleDeleteList}>
         Poista lista
       </Button>
     </div>
