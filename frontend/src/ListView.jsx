@@ -188,7 +188,8 @@ const ListView = ({ noteItems, setNoteItems }) => {
           }
         }}
       />
-        <Button onClick={handleAddItem}>
+        <Button 
+        onClick={handleAddItem}>
           <AddIcon />
         </Button>
       </Stack>
