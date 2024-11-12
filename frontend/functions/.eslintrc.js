@@ -11,19 +11,19 @@ module.exports = {
     "google",
   ],
   parserOptions: {
-    sourceType: "module", // This ensures ES modules (e.g., `import` and `export`) are supported
+    sourceType: "module",
   },
   ignorePatterns: [
-    "/lib/**/*", // Ignore built files
-    "/generated/**/*", // Ignore generated files
-    "/node_modules/**/*", // Ignore node_modules folder
+    "/lib/**/*",
+    "/generated/**/*",
+    "/node_modules/**/*",
   ],
   plugins: [
-    "import", // Import plugin for linting imports
+    "import",
   ],
   rules: {
-    "quotes": ["error", "double"], // Enforce double quotes
-    "import/no-unresolved": 0, // Disable unresolved import rule
-    "indent": ["error", 2], // Enforce 2-space indentation
+    "quotes": ["error", "double"],
+    "import/no-unresolved": 0,
+    "indent": ["error", 2],
   },
 };
