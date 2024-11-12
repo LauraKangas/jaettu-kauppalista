@@ -2,11 +2,11 @@
   "name": "frontend",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "start": "react-scripts start",
-  "build": "react-scripts build",
-  "postinstall": "npm install"
-},
+  "scripts": {
+    "start": "serve -s build -l $PORT",
+    "build": "react-scripts build",
+    "test": "react-scripts test"
+  },
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
@@ -17,7 +17,8 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.26.2",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "serve": "^14.2.0"  
   },
   "author": "",
   "license": "ISC",
