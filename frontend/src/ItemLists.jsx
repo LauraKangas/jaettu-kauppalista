@@ -13,12 +13,23 @@ import Edit from '@mui/icons-material/Edit';
 const ItemLists = ({ noteItems, setNoteItems }) => {
   const [newListContent, setNewListContent] = useState('');
   const { enqueueSnackbar } = useSnackbar(); 
-  const userPin = localStorage.getItem('userPin'); 
+
   const navigate = useNavigate();
+
+  const [userPin, setUserPin] = useState(null); 
+
+  useEffect(() => {
+    const storedUserPin = localStorage.getItem('userPin');
+    if (storedUserPin) {
+      setUserPin(storedUserPin);  
+    } else {
+      console.error('UserPin not found');
+    }
+  }, []);
 
   useEffect(() => {
     const fetchLists = async () => {
-      if (!userPin) return;
+      if (!userPin) return;  
 
       const listsCollection = collection(db, 'users', userPin, 'lists');
       const querySnapshot = await getDocs(listsCollection);
@@ -29,8 +40,9 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
       setNoteItems(listsArray);
     };
 
-    fetchLists();
+    fetchLists();  
   }, [userPin, setNoteItems]);
+  
 
   const handleCreateList = async () => {
     if (!newListContent) {

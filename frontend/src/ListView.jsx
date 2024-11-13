@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBack from '@mui/icons-material/ArrowBack';
@@ -22,25 +22,27 @@ const ListView = ({ noteItems, setNoteItems }) => {
   const userPin = localStorage.getItem('userPin'); 
 
   useEffect(() => {
+    const fetchList = async () => {
+      if (!userPin) return;
 
-    const foundList = noteItems.find(item => item.id === id);
+      const docRef = doc(db, 'users', userPin, 'lists', id);
+      const docSnap = await getDoc(docRef);
 
-    if (foundList) {
-      setCurrentList(foundList); 
-    } else {
-      enqueueSnackbar('Listaa ei löydy.', { variant: 'error' }); 
-    }
-  }, [id, noteItems, enqueueSnackbar]);
+      if (docSnap.exists()) {
+        setCurrentList(docSnap.data());
+      } else {
+        enqueueSnackbar('Listaa ei löydy.', { variant: 'error' });
+      }
+    };
 
-  if (!currentList) {
-    return <div>Loading...</div>;
-  }
+    fetchList();
+  }, [id, userPin, enqueueSnackbar]);
 
   const handleDeleteList = async () => {
     try {
-      await deleteDoc(doc(db, 'users', userPin, 'lists', id)); 
+      await deleteDoc(doc(db, 'users', userPin, 'lists', id));
       setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
-      navigate('/lists'); 
+      navigate('/lists');
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
     }
@@ -48,37 +50,61 @@ const ListView = ({ noteItems, setNoteItems }) => {
 
   const handleAddItem = async () => {
     if (!newItem) return;
-
+  
     const validation = validateItemContent(newItem);
     if (!validation.isValid) {
       enqueueSnackbar(validation.message, { variant: 'error' });
       return;
     }
-
+  
     if (!checkForDuplicateItem(currentList.items.map(i => i.content), newItem)) {
       enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
       return;
     }
-
+  
+    const newItemObject = { content: newItem, isChecked: false };
+  
     const updatedList = {
       ...currentList,
-      items: [...currentList.items, { content: newItem, isChecked: false }]
+      items: [...currentList.items, newItemObject]
     };
 
-    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList); 
-    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
-    setNewItem('');
+    setCurrentList(updatedList);
+  
+    setNoteItems(prevItems =>
+      prevItems.map(item => (item.id === id ? updatedList : item))
+    );
+  
+    try {
+      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
+
+      setNewItem('');
+    } catch (error) {
+      enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
+    }
   };
+  
 
   const handleDeleteItem = async (itemToDelete) => {
     const updatedList = {
       ...currentList,
       items: currentList.items.filter(item => item.content !== itemToDelete.content)
     };
+  
+    try {
+      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
 
-    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList); 
-    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+      setCurrentList(updatedList);
+  
+      setNoteItems(prevItems => 
+        prevItems.map(item => (item.id === id ? updatedList : item))
+      );
+      
+    } catch (error) {
+      enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
+    }
   };
+  
 
   const handleEditItem = (itemToEdit) => {
     setEditingItem(itemToEdit);
@@ -112,7 +138,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
     );
     const updatedList = { ...currentList, items: updatedItems };
 
-    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList); 
+    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
     setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
     setEditingItem(null);
     setEditedItemContent('');
@@ -124,9 +150,13 @@ const ListView = ({ noteItems, setNoteItems }) => {
     );
     const updatedList = { ...currentList, items: updatedItems };
 
-    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList); 
+    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
     setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
   };
+
+  if (!currentList) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -209,3 +239,4 @@ const ListView = ({ noteItems, setNoteItems }) => {
 };
 
 export default ListView;
+
