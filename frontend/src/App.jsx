@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from './utils/firebase/app'; 
-import ItemLists from './ItemLists'; 
-import ListView from './ListView'; 
-import fetchLists from './functions/lists/fetchLists'; 
+import { db } from './utils/firebase/app';
+import ItemLists from './ItemLists';
+import ListView from './ListView';
+import PinPage from './PinPage'; // Import PinPage component
 
 const App = () => {
   const [noteItems, setNoteItems] = useState([]);
+  const [userPin, setUserPin] = useState(''); // State to hold the user pin
 
   useEffect(() => {
     const fetchLists = async () => {
@@ -24,7 +25,8 @@ const App = () => {
     <Router>
       <div className="container">
         <Routes>
-          <Route path="/" element={<ItemLists noteItems={noteItems} setNoteItems={setNoteItems} />} />
+          <Route path="/" element={<PinPage setUserPin={setUserPin} />} /> {/* PinPage as the first route */}
+          <Route path="/lists" element={<ItemLists noteItems={noteItems} setNoteItems={setNoteItems} />} />
           <Route path="/list/:id" element={<ListView noteItems={noteItems} setNoteItems={setNoteItems} />} />
         </Routes>
       </div>
@@ -33,4 +35,3 @@ const App = () => {
 };
 
 export default App;
-

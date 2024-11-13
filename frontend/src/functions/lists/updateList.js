@@ -7,3 +7,4 @@ const updateList = async (listId, updates) => {
 };
 
 export default updateList;
+
