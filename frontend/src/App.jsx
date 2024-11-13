@@ -25,7 +25,7 @@ const App = () => {
     <Router>
       <div className="container">
         <Routes>
-          <Route path="/" element={<PinPage setUserPin={setUserPin} />} /> {/* PinPage as the first route */}
+          <Route path="/" element={<PinPage setUserPin={setUserPin} />} /> 
           <Route path="/lists" element={<ItemLists noteItems={noteItems} setNoteItems={setNoteItems} />} />
           <Route path="/list/:id" element={<ListView noteItems={noteItems} setNoteItems={setNoteItems} />} />
         </Routes>

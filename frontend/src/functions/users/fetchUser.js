@@ -1,18 +1,18 @@
 
-import { db } from '../../utils/firebase/app'; // Adjust import based on your folder structure
+import { db } from '../../utils/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 
-// Function to fetch user data based on the PIN
+
 export async function fetchUser(pin) {
   try {
-    const userRef = doc(db, 'pins', pin); // Access the pin document in Firestore
-    const userSnap = await getDoc(userRef); // Get the document snapshot
+    const userRef = doc(db, 'pins', pin); 
+    const userSnap = await getDoc(userRef); 
 
     if (userSnap.exists()) {
-      return userSnap.data(); // Return user data if it exists
+      return userSnap.data();
     } else {
       console.log("No such user with this pin!");
-      return null; // Return null if no user exists with the given pin
+      return null; 
     }
   } catch (error) {
     console.error("Error fetching user:", error);

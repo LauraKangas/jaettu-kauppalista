@@ -5,7 +5,7 @@ export default async function createItem(listId, newItem) {
   try {
     const listRef = doc(db, 'lists', listId);
     await updateDoc(listRef, {
-      items: newItem // You might want to merge this with existing items
+      items: newItem 
     });
   } catch (e) {
     console.error("Error adding item: ", e);

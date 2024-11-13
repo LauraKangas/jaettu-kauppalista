@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, addDoc, deleteDoc, getDocs } from 'firebase/firestore'; 
 import { db } from './utils/firebase/app'; 
 import { validateItemContent } from './validations'; 
@@ -8,12 +8,13 @@ import AddIcon from '@mui/icons-material/Add';
 import { Button, TextField, Stack } from '@mui/material';
 import { useSnackbar } from 'notistack'; 
 import LogOut from './LogOut';
+import Edit from '@mui/icons-material/Edit';
 
 const ItemLists = ({ noteItems, setNoteItems }) => {
   const [newListContent, setNewListContent] = useState('');
   const { enqueueSnackbar } = useSnackbar(); 
   const userPin = localStorage.getItem('userPin'); 
-
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLists = async () => {
@@ -56,15 +57,6 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
     setNewListContent(''); 
   };
 
-  const handleDeleteList = async (id) => {
-    try {
-      await deleteDoc(doc(db, 'users', userPin, 'lists', id)); 
-      setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
-    } catch (error) {
-      enqueueSnackbar('Virhe poistaessa listaa. Yritä hetken kuluttua uudelleen.', { variant: 'error' }); 
-    }
-  };
-
   return (
     <div>
       <div>
@@ -76,9 +68,9 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
         {noteItems && noteItems.map((item) => (
           <li key={item.id}>
             <Link to={`/list/${item.id}`}>{item.content}</Link>
-            <Button onClick={() => handleDeleteList(item.id)}>
-              <DeleteIcon /> 
-            </Button>
+            <Button onClick={() => navigate(`/list/${item.id}`)}>
+            <Edit />
+          </Button>
           </li>
         ))}
       </ul>
