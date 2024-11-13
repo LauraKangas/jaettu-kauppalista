@@ -111,6 +111,3 @@ const ItemLists = ({ noteItems, setNoteItems }) => {
 
 export default ItemLists;
 
-
-
-
