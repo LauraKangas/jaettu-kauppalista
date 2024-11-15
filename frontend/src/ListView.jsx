@@ -22,13 +22,21 @@ const ListView = ({ noteItems, setNoteItems }) => {
   const userPin = localStorage.getItem('userPin'); 
 
   useEffect(() => {
-    const foundList = Array.isArray(noteItems) ? noteItems.find(item => item.id === id) : null;
-    if (foundList) {
-      setCurrentList(foundList);
-    } else {
-      console.error('List not found');
-    }
-  }, [id, noteItems]);
+    const fetchList = async () => {
+      if (!userPin) return;
+
+      const docRef = doc(db, 'users', userPin, 'lists', id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setCurrentList(docSnap.data());
+      } else {
+        enqueueSnackbar('Listaa ei löydy.', { variant: 'error' });
+      }
+    };
+
+    fetchList();
+  }, [id, userPin, enqueueSnackbar]);
 
   const handleDeleteList = async () => {
     try {
@@ -61,15 +69,21 @@ const ListView = ({ noteItems, setNoteItems }) => {
       items: [...currentList.items, newItemObject]
     };
 
+    setCurrentList(updatedList);
+  
+    setNoteItems(prevItems =>
+      prevItems.map(item => (item.id === id ? updatedList : item))
+    );
+  
     try {
       await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
-      setCurrentList(updatedList); 
+
       setNewItem('');
     } catch (error) {
       enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
     }
   };
+  
 
   const handleDeleteItem = async (itemToDelete) => {
     const updatedList = {
@@ -79,12 +93,18 @@ const ListView = ({ noteItems, setNoteItems }) => {
   
     try {
       await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
-      setCurrentList(updatedList); 
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item))); 
+
+      setCurrentList(updatedList);
+  
+      setNoteItems(prevItems => 
+        prevItems.map(item => (item.id === id ? updatedList : item))
+      );
+      
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
     }
   };
+  
 
   const handleEditItem = (itemToEdit) => {
     setEditingItem(itemToEdit);
@@ -118,15 +138,10 @@ const ListView = ({ noteItems, setNoteItems }) => {
     );
     const updatedList = { ...currentList, items: updatedItems };
 
-    try {
-      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
-      setCurrentList(updatedList); 
-      setEditingItem(null);
-      setEditedItemContent('');
-    } catch (error) {
-      enqueueSnackbar('Virhe muokatessa tuotetta: ' + error.message, { variant: 'error' });
-    }
+    await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
+    setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
+    setEditingItem(null);
+    setEditedItemContent('');
   };
 
   const handleCheckboxChange = async (itemToToggle) => {
@@ -135,13 +150,8 @@ const ListView = ({ noteItems, setNoteItems }) => {
     );
     const updatedList = { ...currentList, items: updatedItems };
 
-    try {
-      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
-      setCurrentList(updatedList); 
-    } catch (error) {
-      enqueueSnackbar('Virhe muokatessa tuotetta: ' + error.message, { variant: 'error' });
-    }
+    await updateDoc(doc(db, 'lists', id), updatedList);
+    setNoteItems(prevItems => Array.isArray(prevItems) ? prevItems.map(item => (item.id === id ? updatedList : item)) : []);
   };
 
   if (!currentList) {
@@ -229,3 +239,4 @@ const ListView = ({ noteItems, setNoteItems }) => {
 };
 
 export default ListView;
+
