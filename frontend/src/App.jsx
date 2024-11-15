@@ -4,11 +4,11 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import ItemLists from './ItemLists';
 import ListView from './ListView';
-import PinPage from './PinPage'; // Import PinPage component
+import PinPage from './PinPage'; 
 
 const App = () => {
   const [noteItems, setNoteItems] = useState([]);
-  const [userPin, setUserPin] = useState(''); // State to hold the user pin
+  const [userPin, setUserPin] = useState(''); 
 
   useEffect(() => {
     const fetchLists = async () => {
