@@ -27,8 +27,6 @@ const PinPage = ({ setUserPin }) => {
     setGeneratedPin(pin);
     localStorage.setItem("userPin", pin); 
     setUserPin(pin); 
-
-    enqueueSnackbar(`Käyttäjäkoodisi on: ${pin}`, { variant: 'success' });
   };
 
   const generateSixDigitPin = () => {
@@ -96,8 +94,6 @@ const PinPage = ({ setUserPin }) => {
 };
 
 export default PinPage;
-
-
 
 
 
