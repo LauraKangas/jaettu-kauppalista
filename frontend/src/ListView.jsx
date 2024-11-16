@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { doc, getDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
@@ -11,55 +11,27 @@ import ArrowBack from '@mui/icons-material/ArrowBack';
 import Checkbox from '@mui/material/Checkbox';
 import { validateItemContent, checkForDuplicateItem } from './validations';
 
-const ListView = ({ noteItems, setNoteItems }) => {
+const ListView = () => {
   const { id } = useParams();
-  const [currentList, setCurrentList] = useState(null);
+  const { state } = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+
+  const userPin = localStorage.getItem('userPin');
+
+  const [listUpdates, setListUpdates] = useState(null);
   const [newItem, setNewItem] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [editedItemContent, setEditedItemContent] = useState('');
-  const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
-  const userPin = localStorage.getItem('userPin');
 
   useEffect(() => {
-    const fetchList = async () => {
-      if (!userPin) return;
-
-      const docRef = doc(db, 'users', userPin, 'lists', id);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setCurrentList(docSnap.data());
-      } else {
-        enqueueSnackbar('Listaa ei löydy.', { variant: 'error' });
-      }
-    };
-
-    fetchList();
-  }, [id, userPin, enqueueSnackbar]);
-
-  useEffect(() => {
-    if (!currentList) return;
-
-    const unsubscribe = onSnapshot(
-      doc(db, 'users', userPin, 'lists', id),
-      (doc) => {
-        if (doc.exists()) {
-          setCurrentList(doc.data());
-        }
-      },
-      (error) => {
-        enqueueSnackbar('Virhe listan kuuntelussa: ' + error.message, { variant: 'error' });
-      }
-    );
-
-    return () => unsubscribe();
-  }, [currentList, userPin, id, enqueueSnackbar]);
+    setListUpdates(state.list)
+  }, [])
 
   const handleDeleteList = async () => {
     try {
-      await deleteDoc(doc(db, 'users', userPin, 'lists', id));
-      setNoteItems(prevItems => prevItems.filter(item => item.id !== id));
+      await deleteDoc(doc(db, 'lists', id));
+      setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
       navigate('/lists');
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
@@ -75,27 +47,23 @@ const ListView = ({ noteItems, setNoteItems }) => {
       return;
     }
 
-    if (!checkForDuplicateItem(currentList.items.map(i => i.content), newItem)) {
+    if (!checkForDuplicateItem(listUpdates.items.map(i => i.content), newItem)) {
       enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
       return;
     }
 
-    const newItemObject = { content: newItem, isChecked: false };
-
+    const newItemObject = { content: newItem.toLowerCase(), isChecked: false };
     const updatedList = {
-      ...currentList,
-      items: [...currentList.items, newItemObject]
+      ...listUpdates,
+      items: [...listUpdates.items, newItemObject]
     };
 
-    setCurrentList(updatedList);
-
-    setNoteItems(prevItems =>
-      prevItems.map(item => (item.id === id ? updatedList : item))
-    );
-
     try {
-      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
+      await updateDoc(doc(db, 'lists', id), {
+        items: arrayUnion(newItemObject),
+      });
 
+      setListUpdates(updatedList)
       setNewItem('');
     } catch (error) {
       enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
@@ -104,18 +72,16 @@ const ListView = ({ noteItems, setNoteItems }) => {
 
   const handleDeleteItem = async (itemToDelete) => {
     const updatedList = {
-      ...currentList,
-      items: currentList.items.filter(item => item.content !== itemToDelete.content)
+      ...listUpdates,
+      items: listUpdates.items.filter(item => item.content !== itemToDelete.content)
     };
 
     try {
-      await updateDoc(doc(db, 'users', userPin, 'lists', id), updatedList);
+      await updateDoc(doc(db, 'lists', id), {
+        items: updatedList.items,
+      })
 
-      setCurrentList(updatedList);
-
-      setNoteItems(prevItems =>
-        prevItems.map(item => (item.id === id ? updatedList : item))
-      );
+      setListUpdates(updatedList)
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
     }
@@ -143,63 +109,56 @@ const ListView = ({ noteItems, setNoteItems }) => {
       return;
     }
 
-    const updatedItems = currentList.items.map(item =>
-      item.content === editingItem.content ? { ...item, content: editedItemContent } : item
-    );
-
-    const updatedList = { ...currentList, items: updatedItems };
+    const updatedList = {
+      ...listUpdates,
+      items: listUpdates.items.map(item => ({
+        ...item,
+        content: item.content === editingItem.content
+          ? editedItemContent.toLowerCase()
+          : item.content.toLowerCase(),
+      }))
+    }
 
     try {
-      const docRef = doc(db, 'users', userPin, 'lists', id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        enqueueSnackbar('Päivitettävää dokumenttia ei löytynyt.', { variant: 'error' });
-        return;
-      }
+      await updateDoc(doc(db, 'lists', id), {
+        items: updatedList.items,
+      })
 
-      await updateDoc(docRef, updatedList);
-
-      setCurrentList(updatedList);
-      setNoteItems(prevItems => prevItems.map(item => (item.id === id ? updatedList : item)));
-
+      setListUpdates(updatedList)
       setEditingItem(null);
       setEditedItemContent('');
-    } catch (error) {
-      enqueueSnackbar('Virhe muokattaessa tuotetta: ' + error.message, { variant: 'error' });
-    }
-  };
-
-  const handleCheckboxChange = async (itemToToggle) => {
-    const updatedItems = currentList.items.map(item =>
-      item.content === itemToToggle.content
-        ? { ...item, isChecked: !item.isChecked }
-        : item
-    );
-
-    const updatedList = { ...currentList, items: updatedItems };
-
-    try {
-      const docRef = doc(db, 'users', userPin, 'lists', id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        enqueueSnackbar('Päivitettävää dokumenttia ei löytynyt.', { variant: 'error' });
-        return;
-      }
-
-      await updateDoc(docRef, updatedList);
-
-      setCurrentList(updatedList);
-      setNoteItems(prevItems =>
-        prevItems.map(item => (item.id === id ? updatedList : item))
-      );
     } catch (error) {
       console.error('Error updating checkbox: ', error);
       enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
     }
   };
 
+  const handleCheckboxChange = async (itemToToggle) => {
+    const updatedList = {
+      ...listUpdates,
+      items: listUpdates.items.map(item => ({
+        ...item,
+        isChecked: item.content === itemToToggle.content
+          ? !item.isChecked
+          : item.isChecked,
+      }))
+    }
+
+    try {
+      await updateDoc(doc(db, 'lists', id), {
+        items: updatedList.items,
+      })
+
+      setListUpdates(updatedList)
+    } catch (error) {
+      console.error('Error updating checkbox: ', error);
+      enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
+    }
+  };
+
+  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`
   
-  if (!currentList) {
+  if (!listUpdates) {
     return <div>Loading...</div>;
   }
 
@@ -209,11 +168,12 @@ const ListView = ({ noteItems, setNoteItems }) => {
         <ArrowBack />
       </Button>
       <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
-        {currentList.content}
+        {capitalize(listUpdates.content)}
       </Typography>
+      <p>Liittymisavain: <strong>{ listUpdates.code }</strong></p>
 
       <ul>
-      {currentList.items.map((item, index) => (
+      {listUpdates.items.map((item, index) => (
         <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           <Checkbox
             checked={item.isChecked || false} 
@@ -237,7 +197,7 @@ const ListView = ({ noteItems, setNoteItems }) => {
                 textDecoration: item.isChecked ? 'line-through' : 'none', 
               }}
             >
-              {item.content}
+              {capitalize(item.content)}
             </span>
           )}
 

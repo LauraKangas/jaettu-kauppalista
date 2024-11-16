@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from './utils/firebase/app'; 
 import { setDoc, doc, getDoc } from 'firebase/firestore';
-import { Button, IconButton } from '@mui/material';
+import { Button } from '@mui/material';
 import { useSnackbar } from 'notistack'; 
 import LoginIcon from '@mui/icons-material/Login';
 
-const PinPage = ({ setUserPin }) => {
+const PinPage = () => {
   const [generatedPin, setGeneratedPin] = useState('');
   const [inputPin, setInputPin] = useState('');
   const navigate = useNavigate();
@@ -14,19 +14,17 @@ const PinPage = ({ setUserPin }) => {
 
   const generatePin = async () => {
     const pin = generateSixDigitPin(); 
-    const pinRef = doc(db, 'pins', pin); 
+    const pinRef = doc(db, 'users', pin); 
 
     const pinSnap = await getDoc(pinRef);
     if (pinSnap.exists()) {
       enqueueSnackbar("Tämä käyttäjäkoodi on jo varattu. Ole hyvä ja yritä uudelleen.", { variant: 'error' });
-      return; 
+      return;
     }
 
-    await setDoc(pinRef, { pin });
+    await setDoc(pinRef, { created: new Date() });
 
     setGeneratedPin(pin);
-    localStorage.setItem("userPin", pin); 
-    setUserPin(pin); 
   };
 
   const generateSixDigitPin = () => {
@@ -43,11 +41,9 @@ const PinPage = ({ setUserPin }) => {
       return;
     }
 
-    const pinRef = doc(db, 'pins', inputPin); 
-    const pinSnap = await getDoc(pinRef); 
+    const pinSnap = await getDoc(doc(db, 'users', inputPin)); 
 
     if (pinSnap.exists()) {
-      setUserPin(inputPin); 
       localStorage.setItem("userPin", inputPin); 
       navigate("/lists"); 
     } else {
