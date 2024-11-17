@@ -162,7 +162,7 @@ const ItemLists = () => {
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <p>Liity listalle:</p>
         <TextField
-          label="Syötä koodi"
+          label="Syötä liittymisavain"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           size="small"
