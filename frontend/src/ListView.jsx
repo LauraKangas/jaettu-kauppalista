@@ -30,14 +30,29 @@ const ListView = () => {
 
   const handleDeleteList = async () => {
     try {
-      await deleteDoc(doc(db, 'lists', id));
-      setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
-      navigate('/lists');
+      const listDocRef = doc(db, 'lists', id);  
+      const listDoc = await getDoc(listDocRef);
+  
+      if (listDoc.exists()) {
+        const listData = listDoc.data();
+  
+        if (listData.visibleTo.includes(userPin)) {
+          await updateDoc(listDocRef, {
+            visibleTo: arrayRemove(userPin),  
+          });
+        }
+        setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
+  
+        enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
+        navigate('/lists');  
+      } else {
+        enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
+      }
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-
+  
   const handleAddItem = async () => {
     if (!newItem) return;
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, collectionGroup, getDocs, addDoc, where, arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { collection, collectionGroup, getDocs, addDoc, where, arrayUnion, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack } from '@mui/material';
@@ -14,7 +14,7 @@ const ItemLists = () => {
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const [userPin, setUserPin] = useState(null);
-  const [noteItems, setNoteItems] = useState(null)
+  const [noteItems, setNoteItems] = useState(null);
 
   useEffect(() => {
     const storedUserPin = localStorage.getItem('userPin');
@@ -72,29 +72,43 @@ const ItemLists = () => {
 
     setNewListContent('');
   };
+
   const handleJoinListByCode = async () => {
     if (!code) {
       enqueueSnackbar('Syötä koodi', { variant: 'error' });
       return;
     }
-
+  
     try {
-      const listsCollection = await getDocs(collection(db, 'lists'), where('code', '==', code))
-
+      const listsCollection = await getDocs(collection(db, 'lists'), where('code', '==', code));
+  
       if (!listsCollection.empty) {
-        const listData = {
-          ...listsCollection.docs[0].data(),
-          id: listsCollection.docs[0].id,
-        }
-
-        if (listData.visibleTo.includes(userPin)) {
+        const listData = listsCollection.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+        })).find(list => list.code === code);  
+  
+        const userPinString = String(userPin);
+        if (listData.visibleTo.includes(userPinString)) {
           enqueueSnackbar('Olet jo liittynyt listalle.', { variant: 'error' });
         } else {
           await updateDoc(doc(db, 'lists', listData.id), {
             visibleTo: arrayUnion(userPin),
-          })
+          });
   
-          setNoteItems(prevItems => [...prevItems, listData]);
+          const updatedDoc = await getDoc(doc(db, 'lists', listData.id));
+          const updatedListData = {
+            ...updatedDoc.data(),
+            id: updatedDoc.id,
+          };
+    
+          setNoteItems(prevItems => {
+            const listExists = prevItems.some(item => item.id === updatedListData.id);
+            if (!listExists) {
+              return [...prevItems, updatedListData];
+            }
+            return prevItems;
+          });
         }
       } else {
         enqueueSnackbar('Listaa ei löytynyt koodilla.', { variant: 'error' });
@@ -102,6 +116,8 @@ const ItemLists = () => {
     } catch (error) {
       enqueueSnackbar('Virhe listan hakemisessa: ' + error.message, { variant: 'error' });
     }
+  
+  
   
     /* try {
       const listsCollection = await getDocs(collection(db, 'lists'), where('visibleTo', 'array-contains', userPin))
