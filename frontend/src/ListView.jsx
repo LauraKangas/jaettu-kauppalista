@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, messaging } from './utils/firebase/app';
 import { enqueueSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
+import { requestNotificationPermission } from './utils/firebase/app';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -26,7 +27,6 @@ const ListView = () => {
     setListUpdates(state.list);
   }, []);
 
-  // Firebase FCM push notification function
   const sendFCMNotification = async (messageContent, userToken) => {
     const serverKey = process.env.REACT_APP_FCM_SERVER_KEY;
 
@@ -49,7 +49,6 @@ const ListView = () => {
     console.log('Notification sent:', data);
   };
 
-  // Handle adding new item to the list
   const handleAddItem = async () => {
     if (!newItem) return;
 
@@ -77,9 +76,7 @@ const ListView = () => {
 
       setListUpdates(updatedList);
       setNewItem('');
-
-      // Send FCM notification after adding item
-      const userToken = await requestNotificationPermission(); // Get the user's token
+      const userToken = await requestNotificationPermission(); 
       if (userToken) {
         sendFCMNotification('A new item has been added to your list!', userToken);
       }

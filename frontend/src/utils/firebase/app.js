@@ -31,24 +31,27 @@ const registerServiceWorker = () => {
   }
 };
 
-const requestNotificationPermission = async () => {
+export const requestNotificationPermission = async () => {
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       console.log('Notification permission granted.');
       const token = await getToken(messaging, {
-        vapidKey: process.env.REACT_APP_VAPID_KEY, 
+        vapidKey: process.env.REACT_APP_VAPID_KEY,
       });
       console.log('FCM Token:', token);
-
       saveTokenToFirestore(token);
+      return token;
     } else {
       console.error('Notification permission denied');
+      return null;
     }
   } catch (error) {
     console.error('Error getting FCM token:', error);
+    return null;
   }
 };
+
 
 const saveTokenToFirestore = async (token) => {
   const user = auth.currentUser;
