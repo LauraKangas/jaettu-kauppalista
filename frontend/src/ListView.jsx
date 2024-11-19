@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
-import { enqueueSnackbar } from 'notistack';
+import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
-import { requestNotificationPermission } from './utils/firebase/app';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,40 +14,45 @@ import { validateItemContent, checkForDuplicateItem } from './validations';
 const ListView = () => {
   const { id } = useParams();
   const { state } = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
   const userPin = localStorage.getItem('userPin');
+
   const [listUpdates, setListUpdates] = useState(null);
   const [newItem, setNewItem] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [editedItemContent, setEditedItemContent] = useState('');
 
   useEffect(() => {
-    setListUpdates(state.list);
-  }, []);
+    setListUpdates(state.list)
+  }, [])
 
-  const sendFCMNotification = async (messageContent, userToken) => {
-    const serverKey = process.env.REACT_APP_FCM_SERVER_KEY;
-
-    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `key=${serverKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: userToken,  
-        notification: {
-          title: 'New Item Added',
-          body: messageContent
+  const handleDeleteList = async () => {
+    try {
+      const listDocRef = doc(db, 'lists', id);  
+      const listDoc = await getDoc(listDocRef);
+  
+      if (listDoc.exists()) {
+        const listData = listDoc.data();
+  
+        if (listData.visibleTo.includes(userPin)) {
+          await updateDoc(listDocRef, {
+            visibleTo: arrayRemove(userPin),  
+          });
         }
-      })
-    });
-
-    const data = await response.json();
-    console.log('Notification sent:', data);
+        setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
+  
+        enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
+        navigate('/lists');  
+      } else {
+        enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
+      }
+    } catch (error) {
+      enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
+    }
   };
-
+  
   const handleAddItem = async () => {
     if (!newItem) return;
 
@@ -59,7 +63,7 @@ const ListView = () => {
     }
 
     if (!checkForDuplicateItem(listUpdates.items.map(i => i.content), newItem)) {
-      enqueueSnackbar('This item is already on the list.', { variant: 'error' });
+      enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
       return;
     }
 
@@ -74,40 +78,10 @@ const ListView = () => {
         items: arrayUnion(newItemObject),
       });
 
-      setListUpdates(updatedList);
+      setListUpdates(updatedList)
       setNewItem('');
-      const userToken = await requestNotificationPermission(); 
-      if (userToken) {
-        sendFCMNotification('A new item has been added to your list!', userToken);
-      }
-
     } catch (error) {
-      enqueueSnackbar('Error adding item: ' + error.message, { variant: 'error' });
-    }
-  };
-
-  const handleDeleteList = async () => {
-    try {
-      const listDocRef = doc(db, 'lists', id);  
-      const listDoc = await getDoc(listDocRef);
-
-      if (listDoc.exists()) {
-        const listData = listDoc.data();
-
-        if (listData.visibleTo.includes(userPin)) {
-          await updateDoc(listDocRef, {
-            visibleTo: arrayRemove(userPin),  
-          });
-        }
-        setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
-
-        enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
-        navigate('/lists');  
-      } else {
-        enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
-      }
-    } catch (error) {
-      enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
+      enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
     }
   };
 
@@ -198,7 +172,7 @@ const ListView = () => {
   };
 
   const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`
-
+  
   if (!listUpdates) {
     return <div>Loading...</div>;
   }
