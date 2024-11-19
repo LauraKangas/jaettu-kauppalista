@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from './utils/firebase/app';
 import ItemLists from './ItemLists';
 import ListView from './ListView';
 import PinPage from './PinPage'; 

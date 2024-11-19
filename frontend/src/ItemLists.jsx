@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, collectionGroup, getDocs, addDoc, where, arrayUnion, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, where, arrayUnion, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack } from '@mui/material';

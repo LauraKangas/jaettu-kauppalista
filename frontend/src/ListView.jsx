@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db, messaging } from './utils/firebase/app';
+import { db } from './utils/firebase/app';
 import { enqueueSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
 import { requestNotificationPermission } from './utils/firebase/app';
