@@ -87,9 +87,9 @@ const ItemLists = () => {
   };
 
   const handleToggleFavorite = async (list) => {
-    const favorites = list.favorites || [];  // Ensure favorites is an array
+    const favorites = Array.isArray(list.favorites) ? list.favorites : [];  // Ensure favorites is an array
     const isFavorite = favorites.includes(userPin);
-  
+
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
@@ -102,7 +102,7 @@ const ItemLists = () => {
           : item
       )
     );
-  
+
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
@@ -118,11 +118,11 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
     }
   };
-  
+
   const handleToggleHide = async (list) => {
-    const hiddenBy = list.hiddenBy || [];  
+    const hiddenBy = Array.isArray(list.hiddenBy) ? list.hiddenBy : [];  // Ensure hiddenBy is an array
     const isHidden = hiddenBy.includes(userPin);
-  
+
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
@@ -135,7 +135,7 @@ const ItemLists = () => {
           : item
       )
     );
-  
+
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         hiddenBy: isHidden ? arrayRemove(userPin) : arrayUnion(userPin),
@@ -151,7 +151,7 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe piilotettaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-  
+
   const handleJoinListByCode = async () => {
     if (!code) {
       enqueueSnackbar('Syötä koodi', { variant: 'error' });
@@ -212,18 +212,18 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
           noteItems
-            .filter(item => !(item.hiddenBy || []).includes(userPin)) 
-            .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length)
+            .filter(item => !(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  // Ensure hiddenBy is an array
+            .sort((a, b) => (Array.isArray(b.favorites) ? b.favorites.length : 0) - (Array.isArray(a.favorites) ? a.favorites.length : 0))  // Handle undefined favorites
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
                 <IconButton onClick={() => handleToggleFavorite(item)}>
-                  {(item.favorites || []).includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+                  {(Array.isArray(item.favorites) ? item.favorites : []).includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
                 </IconButton>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
                   {capitalize(item.content)}
                 </Link>
                 <IconButton onClick={() => handleToggleHide(item)}>
-                  {(item.hiddenBy || []).includes(userPin) ? <Visibility /> : <VisibilityOff />}
+                  {(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin) ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </li>
             ))}
@@ -260,35 +260,27 @@ const ItemLists = () => {
 
       <ul>
         {noteItems &&
-        noteItems
-        .filter(item => (item.hiddenBy || []).includes(userPin)) 
-          .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length) 
-          .map((item) => (
-            <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
-              <IconButton onClick={() => handleToggleFavorite(item)}>
-                {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-              </IconButton>
-              <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                {capitalize(item.content)} (Hidden)
-              </Link>
-              <IconButton onClick={() => handleToggleHide(item)}>
-                {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
-              </IconButton>
-            </li>
-        ))}
+          noteItems
+            .filter(item => (Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  // Ensure hiddenBy is an array
+            .sort((a, b) => (Array.isArray(b.favorites) ? b.favorites.length : 0) - (Array.isArray(a.favorites) ? a.favorites.length : 0))  // Handle undefined favorites
+            .map((item) => (
+              <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
+                <IconButton onClick={() => handleToggleFavorite(item)}>
+                  {(Array.isArray(item.favorites) ? item.favorites : []).includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+                </IconButton>
+                <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+                  {capitalize(item.content)} (Hidden)
+                </Link>
+                <IconButton onClick={() => handleToggleHide(item)}>
+                  {(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin) ? <Visibility /> : <VisibilityOff />} 
+                </IconButton>
+              </li>
+            ))}
       </ul>
     </div>
   );
 };
 
 export default ItemLists;
-
-
-
-
-
-
-
-
 
 
