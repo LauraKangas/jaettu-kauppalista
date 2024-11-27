@@ -87,9 +87,9 @@ const ItemLists = () => {
   };
 
   const handleToggleFavorite = async (list) => {
-    const favorites = list.favorites || []; 
+    const favorites = list.favorites || [];  // Ensure favorites is an array
     const isFavorite = favorites.includes(userPin);
-
+  
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
@@ -102,7 +102,7 @@ const ItemLists = () => {
           : item
       )
     );
-
+  
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
@@ -118,11 +118,11 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
     }
   };
-
+  
   const handleToggleHide = async (list) => {
     const hiddenBy = list.hiddenBy || [];  
     const isHidden = hiddenBy.includes(userPin);
-
+  
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
@@ -135,10 +135,10 @@ const ItemLists = () => {
           : item
       )
     );
-
+  
     try {
       await updateDoc(doc(db, 'lists', list.id), {
-        hiddenBy: isHidden ? arrayRemove.includes(userPin) : arrayUnion.includes(userPin),
+        hiddenBy: isHidden ? arrayRemove(userPin) : arrayUnion(userPin),
       });
     } catch (error) {
       setNoteItems(prevItems =>
@@ -151,7 +151,7 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe piilotettaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-
+  
   const handleJoinListByCode = async () => {
     if (!code) {
       enqueueSnackbar('Syötä koodi', { variant: 'error' });
@@ -261,7 +261,7 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
         noteItems
-          .filter(item => item.hiddenBy.includes(userPin))  
+        .filter(item => (item.hiddenBy || []).includes(userPin)) 
           .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length) 
           .map((item) => (
             <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
