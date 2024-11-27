@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { collection, getDocs, addDoc, where, arrayUnion, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
-import { Button, TextField, Stack } from '@mui/material';
+import { Button, TextField, Stack, IconButton } from '@mui/material';
 import LogOut from './LogOut';
 import AddIcon from '@mui/icons-material/Add';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { validateItemContent } from './validations';
 
 const ItemLists = () => {
@@ -21,7 +23,7 @@ const ItemLists = () => {
 
     storedUserPin
       ? setUserPin(storedUserPin)
-      : console.error('UserPin not found')
+      : console.error('UserPin not found');
   }, []);
 
   useEffect(() => {
@@ -31,13 +33,13 @@ const ItemLists = () => {
       const listsCollection = await getDocs(collection(db, 'lists'));
       const lists = listsCollection.docs
         .filter(doc => doc.data().visibleTo.includes(userPin))
-        .map(doc => ({ ...doc.data(), id: doc.id }))
+        .map(doc => ({ ...doc.data(), id: doc.id }));
 
       setNoteItems(lists);
-    })()
+    })();
   }, [userPin, setNoteItems]);
 
-  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`
+  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
 
   const handleCreateList = async () => {
     if (!newListContent) {
@@ -53,9 +55,10 @@ const ItemLists = () => {
 
     const newList = {
       content: newListContent,
-      items: [], 
+      items: [],
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       visibleTo: [userPin],
+      isFavorite: false, 
     };
 
     try {
@@ -63,7 +66,7 @@ const ItemLists = () => {
 
       setNoteItems(prevItems => [
         ...prevItems,
-        { id: docRef.id, ...newList }, 
+        { id: docRef.id, ...newList },
       ]);
       enqueueSnackbar('Lista luotiin onnistuneesti.', { variant: 'success' });
     } catch (error) {
@@ -73,21 +76,39 @@ const ItemLists = () => {
     setNewListContent('');
   };
 
+  const handleToggleFavorite = async (list) => {
+    try {
+      await updateDoc(doc(db, 'lists', list.id), {
+        isFavorite: !list.isFavorite,
+      });
+
+      setNoteItems(prevItems =>
+        prevItems.map(item =>
+          item.id === list.id ? { ...item, isFavorite: !item.isFavorite } : item
+        )
+      );
+    } catch (error) {
+      enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
+    }
+  };
+
   const handleJoinListByCode = async () => {
     if (!code) {
       enqueueSnackbar('Syötä koodi', { variant: 'error' });
       return;
     }
-  
+
     try {
       const listsCollection = await getDocs(collection(db, 'lists'), where('code', '==', code));
-  
+
       if (!listsCollection.empty) {
-        const listData = listsCollection.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-        })).find(list => list.code === code);  
-  
+        const listData = listsCollection.docs
+          .map(doc => ({
+            ...doc.data(),
+            id: doc.id,
+          }))
+          .find(list => list.code === code);
+
         const userPinString = String(userPin);
         if (listData.visibleTo.includes(userPinString)) {
           enqueueSnackbar('Olet jo liittynyt listalle.', { variant: 'error' });
@@ -95,13 +116,13 @@ const ItemLists = () => {
           await updateDoc(doc(db, 'lists', listData.id), {
             visibleTo: arrayUnion(userPin),
           });
-  
+
           const updatedDoc = await getDoc(doc(db, 'lists', listData.id));
           const updatedListData = {
             ...updatedDoc.data(),
             id: updatedDoc.id,
           };
-    
+
           setNoteItems(prevItems => {
             const listExists = prevItems.some(item => item.id === updatedListData.id);
             if (!listExists) {
@@ -116,48 +137,32 @@ const ItemLists = () => {
     } catch (error) {
       enqueueSnackbar('Virhe listan hakemisessa: ' + error.message, { variant: 'error' });
     }
-  
-  
-  
-    /* try {
-      const listsCollection = await getDocs(collection(db, 'lists'), where('visibleTo', 'array-contains', userPin))
-  
-      if (!listsCollection.empty) {
-        const listData = {
-          ...listsCollection.docs[0].data(),
-          id: listsCollection.docs[0].id,
-        }
-        await updateDoc(doc(db, 'lists', listData.id), {
-          visibleTo: arrayUnion(userPin),
-        })
+  };
 
-        setNoteItems(prevItems => [...prevItems, listData]);
-        enqueueSnackbar('Listalle liittyminen onnistui.', { variant: 'success' });
-      } else {
-        enqueueSnackbar('Listaa ei löytynyt koodilla.', { variant: 'error' });
-      }
-    } catch (error) {
-      console.error('Virhe listan hakemisessa: ', error);
-      enqueueSnackbar('Virhe listan hakemisessa: ' + error.message, { variant: 'error' });
-    } */
-  };
-  
   const handleLogout = () => {
-    localStorage.removeItem('userPin'); 
-    navigate('/'); 
+    localStorage.removeItem('userPin');
+    navigate('/');
   };
-  
+
   return (
     <div>
       <LogOut onLogout={handleLogout} />
       <h1>Listasi</h1>
       <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
       <ul>
-        {noteItems && noteItems.map((item) => (
-          <li key={item.id}>
-            <Link to={`/list/${item.id}`} state={{ list: item }}>{capitalize(item.content)}</Link>
-          </li>
-        ))}
+        {noteItems &&
+          noteItems
+            .sort((a, b) => b.isFavorite - a.isFavorite) 
+            .map((item) => (
+              <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
+                <IconButton onClick={() => handleToggleFavorite(item)}>
+                  {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+                </IconButton>
+                <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+                  {capitalize(item.content)}
+                </Link>
+              </li>
+            ))}
       </ul>
 
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
@@ -196,6 +201,7 @@ const ItemLists = () => {
 };
 
 export default ItemLists;
+
 
 
 

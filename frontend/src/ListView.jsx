@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { doc, getDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
@@ -9,6 +9,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import Checkbox from '@mui/material/Checkbox';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { validateItemContent, checkForDuplicateItem } from './validations';
 
 const ListView = () => {
@@ -24,27 +26,41 @@ const ListView = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [editedItemContent, setEditedItemContent] = useState('');
 
+  const fetchList = async () => {
+    try {
+      const listDocRef = doc(db, 'lists', id);
+      const listDoc = await getDoc(listDocRef);
+      if (listDoc.exists()) {
+        setListUpdates(listDoc.data());
+      } else {
+        enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
+      }
+    } catch (error) {
+      enqueueSnackbar('Virhe ladattaessa listaa: ' + error.message, { variant: 'error' });
+    }
+  };
+
   useEffect(() => {
-    setListUpdates(state.list);
-  }, [state.list]);
+    fetchList();
+  }, [id]);
 
   const handleDeleteList = async () => {
     try {
-      const listDocRef = doc(db, 'lists', id);  
+      const listDocRef = doc(db, 'lists', id);
       const listDoc = await getDoc(listDocRef);
-  
+
       if (listDoc.exists()) {
         const listData = listDoc.data();
-  
+
         if (listData.visibleTo.includes(userPin)) {
           await updateDoc(listDocRef, {
-            visibleTo: arrayRemove(userPin),  
+            visibleTo: arrayRemove(userPin),
           });
         }
-        setListUpdates(null); 
-  
+        setListUpdates(null);
+
         enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
-        navigate('/lists');  
+        navigate('/lists');
       } else {
         enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
       }
@@ -52,7 +68,7 @@ const ListView = () => {
       enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-  
+
   const handleAddItem = async () => {
     if (!newItem) return;
 
@@ -67,18 +83,14 @@ const ListView = () => {
       return;
     }
 
-    const newItemObject = { content: newItem.toLowerCase(), isChecked: false };
-    const updatedList = {
-      ...listUpdates,
-      items: [...listUpdates.items, newItemObject]
-    };
+    const newItemObject = { content: newItem.toLowerCase(), isChecked: false, isFavorite: false };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: arrayUnion(newItemObject),
       });
 
-      setListUpdates(updatedList); 
+      fetchList();
       setNewItem('');
     } catch (error) {
       enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
@@ -86,17 +98,12 @@ const ListView = () => {
   };
 
   const handleDeleteItem = async (itemToDelete) => {
-    const updatedList = {
-      ...listUpdates,
-      items: listUpdates.items.filter(item => item.content !== itemToDelete.content)
-    };
-
     try {
       await updateDoc(doc(db, 'lists', id), {
-        items: updatedList.items,
+        items: arrayRemove(itemToDelete),
       });
 
-      setListUpdates(updatedList); 
+      fetchList();
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
     }
@@ -131,7 +138,7 @@ const ListView = () => {
         content: item.content === editingItem.content
           ? editedItemContent.toLowerCase()
           : item.content.toLowerCase(),
-      }))
+      })),
     };
 
     try {
@@ -139,7 +146,7 @@ const ListView = () => {
         items: updatedList.items,
       });
 
-      setListUpdates(updatedList); 
+      fetchList();
       setEditingItem(null);
       setEditedItemContent('');
     } catch (error) {
@@ -152,10 +159,8 @@ const ListView = () => {
       ...listUpdates,
       items: listUpdates.items.map(item => ({
         ...item,
-        isChecked: item.content === itemToToggle.content
-          ? !item.isChecked
-          : item.isChecked,
-      }))
+        isChecked: item.content === itemToToggle.content ? !item.isChecked : item.isChecked,
+      })),
     };
 
     try {
@@ -163,9 +168,35 @@ const ListView = () => {
         items: updatedList.items,
       });
 
-      setListUpdates(updatedList); 
+      fetchList();
     } catch (error) {
       enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
+    }
+  };
+
+  const handleToggleFavorite = async (itemToToggle) => {
+    if (!itemToToggle || !itemToToggle.content) {
+      enqueueSnackbar('Virhe: Tuotteen tietoja ei löytynyt.', { variant: 'error' });
+      return;
+    }
+
+    const updatedList = {
+      ...listUpdates,
+      items: listUpdates.items.map(item =>
+        item.content === itemToToggle.content
+          ? { ...item, isFavorite: !item.isFavorite }
+          : item
+      ),
+    };
+
+    try {
+      await updateDoc(doc(db, 'lists', id), {
+        items: updatedList.items,
+      });
+
+      fetchList();
+    } catch (error) {
+      enqueueSnackbar('Virhe päivittäessä suosikkia: ' + error.message, { variant: 'error' });
     }
   };
 
@@ -183,54 +214,59 @@ const ListView = () => {
       <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
         {capitalize(listUpdates.content)}
       </Typography>
-      <p>Liittymisavain: <strong>{ listUpdates.code }</strong></p>
+      <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
 
       <ul>
-      {listUpdates.items.map((item, index) => (
-        <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <Checkbox
-            checked={item.isChecked || false} 
-            onChange={() => handleCheckboxChange(item)} 
-          />
+        {listUpdates.items
+          .sort((a, b) => b.isFavorite - a.isFavorite)
+          .map(item => (
+            <li key={item.content} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+              <Checkbox
+                checked={item.isChecked || false}
+                onChange={() => handleCheckboxChange(item)}
+              />
+              <Button onClick={() => handleToggleFavorite(item)}>
+                {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+              </Button>
+              {editingItem && editingItem.content === item.content ? (
+                <TextField
+                  autoFocus
+                  size="small"
+                  value={editedItemContent}
+                  onChange={(e) => setEditedItemContent(e.target.value)}
+                  onBlur={handleSaveEditedItem}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()}
+                />
+              ) : (
+                <span
+                  style={{
+                    flexGrow: 1,
+                    marginLeft: '8px',
+                    textDecoration: item.isChecked ? 'line-through' : 'none',
+                  }}
+                >
+                  {capitalize(item.content)}
+                </span>
+              )}
 
-          {editingItem && editingItem.content === item.content ? (
-            <TextField
-              autoFocus
-              size="small"
-              value={editedItemContent}
-              onChange={(e) => setEditedItemContent(e.target.value)}
-              onBlur={handleSaveEditedItem}
-              onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()}
-            />
-          ) : (
-            <span
-              style={{
-                flexGrow: 1,
-                marginLeft: '8px',
-                textDecoration: item.isChecked ? 'line-through' : 'none', 
-              }}
-            >
-              {capitalize(item.content)}
-            </span>
-          )}
+              {!editingItem || editingItem.content !== item.content ? (
+                <Button onClick={() => handleEditItem(item)}>
+                  <EditIcon />
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={handleSaveEditedItem}>Save</Button>
+                  <Button onClick={handleCancelEdit}>Cancel</Button>
+                </>
+              )}
 
-          {!editingItem || editingItem.content !== item.content ? (
-            <Button onClick={() => handleEditItem(item)}>
-              <EditIcon />
-            </Button>
-          ) : (
-            <>
-              <Button onClick={handleSaveEditedItem}>Save</Button>
-              <Button onClick={handleCancelEdit}>Cancel</Button>
-            </>
-          )}
+              <Button onClick={() => handleDeleteItem(item)}>
+                <DeleteIcon />
+              </Button>
+            </li>
+          ))}
+      </ul>
 
-          <Button onClick={() => handleDeleteItem(item)}>
-            <DeleteIcon />
-          </Button>
-        </li>
-      ))}
-    </ul>
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <TextField
           label="Uusi tuote"
