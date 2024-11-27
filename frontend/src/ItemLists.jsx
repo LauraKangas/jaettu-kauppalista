@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, where, arrayUnion, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, where, arrayUnion, arrayRemove, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, IconButton } from '@mui/material';
@@ -77,20 +77,38 @@ const ItemLists = () => {
   };
 
   const handleToggleFavorite = async (list) => {
+    const isFavorite = list.favorites.includes(userPin);
+ 
+    setNoteItems(prevItems =>
+      prevItems.map(item =>
+        item.id === list.id
+          ? {
+              ...item,
+              favorites: isFavorite
+                ? item.favorites.filter(pin => pin !== userPin) 
+                : [...item.favorites, userPin]                   
+            }
+          : item
+      )
+    );
+  
     try {
       await updateDoc(doc(db, 'lists', list.id), {
-        isFavorite: !list.isFavorite,
+        favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
       });
+    } catch (error) {
 
       setNoteItems(prevItems =>
         prevItems.map(item =>
-          item.id === list.id ? { ...item, isFavorite: !item.isFavorite } : item
+          item.id === list.id
+            ? { ...item, favorites: isFavorite ? [...item.favorites, userPin] : item.favorites.filter(pin => pin !== userPin) }
+            : item
         )
       );
-    } catch (error) {
       enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
     }
   };
+  
 
   const handleJoinListByCode = async () => {
     if (!code) {
@@ -152,15 +170,15 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
           noteItems
-            .sort((a, b) => b.isFavorite - a.isFavorite) 
-            .map((item) => (
-              <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton onClick={() => handleToggleFavorite(item)}>
-                  {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-                </IconButton>
-                <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                  {capitalize(item.content)}
-                </Link>
+          .sort((a, b) => b.favorites.length - a.favorites.length) 
+          .map((item) => (
+            <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton onClick={() => handleToggleFavorite(item)}>
+                {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+              </IconButton>
+              <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+                {capitalize(item.content)}
+              </Link>
               </li>
             ))}
       </ul>
