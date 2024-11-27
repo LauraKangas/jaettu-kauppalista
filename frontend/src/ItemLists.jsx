@@ -20,17 +20,15 @@ const ItemLists = () => {
   const [userPin, setUserPin] = useState(null);
   const [noteItems, setNoteItems] = useState([]);
 
-  // Fetch userPin from localStorage and set state
   useEffect(() => {
     const storedUserPin = localStorage.getItem('userPin');
     if (storedUserPin) {
       setUserPin(storedUserPin);
     } else {
-      navigate('/login');  // Optionally redirect to login if userPin is not found
+      navigate('/');  
     }
   }, [navigate]);
 
-  // Fetch lists from Firestore
   useEffect(() => {
     const fetchLists = async () => {
       if (!userPin) return;
@@ -50,10 +48,8 @@ const ItemLists = () => {
     fetchLists();
   }, [userPin, enqueueSnackbar]);
 
-  // Capitalize list content
   const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
 
-  // Handle creating a new list
   const handleCreateList = async () => {
     if (!newListContent) {
       enqueueSnackbar('Listan nimi ei voi olla tyhjä.', { variant: 'error' });
@@ -89,9 +85,8 @@ const ItemLists = () => {
     setNewListContent('');
   };
 
-  // Toggle favorite status for a list
   const handleToggleFavorite = async (list) => {
-    const favorites = list.favorites || [];  // Default to empty array if undefined
+    const favorites = list.favorites || []; 
     const isFavorite = favorites.includes(userPin);
 
     setNoteItems(prevItems =>
