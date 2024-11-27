@@ -8,7 +8,7 @@ import LogOut from './LogOut';
 import AddIcon from '@mui/icons-material/Add';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
-import Visibility from '@mui/icons-material/Visibility'
+import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { validateItemContent } from './validations';
 
@@ -18,31 +18,42 @@ const ItemLists = () => {
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const [userPin, setUserPin] = useState(null);
-  const [noteItems, setNoteItems] = useState(null);
+  const [noteItems, setNoteItems] = useState([]);
 
+  // Fetch userPin from localStorage and set state
   useEffect(() => {
     const storedUserPin = localStorage.getItem('userPin');
+    if (storedUserPin) {
+      setUserPin(storedUserPin);
+    } else {
+      navigate('/login');  // Optionally redirect to login if userPin is not found
+    }
+  }, [navigate]);
 
-    storedUserPin
-      ? setUserPin(storedUserPin)
-      : console.error('UserPin not found');
-  }, []);
-
+  // Fetch lists from Firestore
   useEffect(() => {
-    (async () => {
+    const fetchLists = async () => {
       if (!userPin) return;
 
-      const listsCollection = await getDocs(collection(db, 'lists'));
-      const lists = listsCollection.docs
-        .filter(doc => doc.data().visibleTo.includes(userPin))
-        .map(doc => ({ ...doc.data(), id: doc.id }));
+      try {
+        const listsCollection = await getDocs(collection(db, 'lists'));
+        const lists = listsCollection.docs
+          .filter(doc => doc.data().visibleTo.includes(userPin))
+          .map(doc => ({ ...doc.data(), id: doc.id }));
 
-      setNoteItems(lists);
-    })();
-  }, [userPin, setNoteItems]);
+        setNoteItems(lists);
+      } catch (error) {
+        enqueueSnackbar('Virhe listojen hakemisessa: ' + error.message, { variant: 'error' });
+      }
+    };
 
+    fetchLists();
+  }, [userPin, enqueueSnackbar]);
+
+  // Capitalize list content
   const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
 
+  // Handle creating a new list
   const handleCreateList = async () => {
     if (!newListContent) {
       enqueueSnackbar('Listan nimi ei voi olla tyhjä.', { variant: 'error' });
@@ -60,7 +71,7 @@ const ItemLists = () => {
       items: [],
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       visibleTo: [userPin],
-      isFavorite: false, 
+      isFavorite: false,
     };
 
     try {
@@ -78,27 +89,29 @@ const ItemLists = () => {
     setNewListContent('');
   };
 
+  // Toggle favorite status for a list
   const handleToggleFavorite = async (list) => {
-    const isFavorite = list.favorites.includes(userPin);
+    const favorites = list.favorites || [];  // Default to empty array if undefined
+    const isFavorite = favorites.includes(userPin);
+
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
           ? {
               ...item,
               favorites: isFavorite
-                ? item.favorites.filter(pin => pin !== userPin) 
-                : [...item.favorites, userPin]                   
+                ? item.favorites.filter(pin => pin !== userPin)
+                : [...item.favorites, userPin],
             }
           : item
       )
     );
-  
+
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
       });
     } catch (error) {
-
       setNoteItems(prevItems =>
         prevItems.map(item =>
           item.id === list.id
@@ -111,20 +124,22 @@ const ItemLists = () => {
   };
 
   const handleToggleHide = async (list) => {
-    const isHidden = list.hiddenBy.includes(userPin);
+    const hiddenBy = list.hiddenBy || [];  
+    const isHidden = hiddenBy.includes(userPin);
+
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
           ? {
               ...item,
               hiddenBy: isHidden
-                ? item.hiddenBy.filter(pin => pin !== userPin) 
-                : [...item.hiddenBy, userPin]                   
+                ? item.hiddenBy.filter(pin => pin !== userPin)
+                : [...item.hiddenBy, userPin],
             }
           : item
       )
     );
-  
+
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         hiddenBy: isHidden ? arrayRemove(userPin) : arrayUnion(userPin),
@@ -140,7 +155,7 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe piilotettaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-  
+
   const handleJoinListByCode = async () => {
     if (!code) {
       enqueueSnackbar('Syötä koodi', { variant: 'error' });
@@ -158,8 +173,7 @@ const ItemLists = () => {
           }))
           .find(list => list.code === code);
 
-        const userPinString = String(userPin);
-        if (listData.visibleTo.includes(userPinString)) {
+        if (listData.visibleTo.includes(userPin)) {
           enqueueSnackbar('Olet jo liittynyt listalle.', { variant: 'error' });
         } else {
           await updateDoc(doc(db, 'lists', listData.id), {
@@ -201,25 +215,23 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
           noteItems
-            .filter(item => !item.hiddenBy.includes(userPin)) 
-            .sort((a, b) => b.favorites.length - a.favorites.length) 
+            .filter(item => !(item.hiddenBy || []).includes(userPin)) 
+            .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length)
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
                 <IconButton onClick={() => handleToggleFavorite(item)}>
-                  {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+                  {(item.favorites || []).includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
                 </IconButton>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
                   {capitalize(item.content)}
                 </Link>
                 <IconButton onClick={() => handleToggleHide(item)}>
-                  {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
+                  {(item.hiddenBy || []).includes(userPin) ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </li>
             ))}
       </ul>
-
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-        <p>Luo uusi lista:</p>
         <TextField
           label="Listan nimi"
           variant="outlined"
@@ -237,42 +249,21 @@ const ItemLists = () => {
         </Button>
       </Stack>
 
-      <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-        <p>Liity listalle:</p>
+      <Stack direction="row" spacing={1} alignItems="center">
         <TextField
-          label="Syötä liittymisavain"
+          label="Liity listalle koodilla"
+          variant="outlined"
+          size="small"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          size="small"
         />
-        <Button onClick={handleJoinListByCode}>
-          <AddIcon />
-        </Button>
+        <Button onClick={handleJoinListByCode}>Liity</Button>
       </Stack>
-
-        {noteItems &&
-        noteItems
-          .filter(item => item.hiddenBy.includes(userPin)) 
-          .sort((a, b) => b.favorites.length - a.favorites.length) 
-          .map((item) => (
-            <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
-              <IconButton onClick={() => handleToggleFavorite(item)}>
-                {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-              </IconButton>
-              <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                {capitalize(item.content)} (Piilotettu)
-              </Link>
-              <IconButton onClick={() => handleToggleHide(item)}>
-                {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
-              </IconButton>
-            </li>
-          ))}
     </div>
   );
 };
 
 export default ItemLists;
-
 
 
 

@@ -27,7 +27,6 @@
     "serve": "^14.2.4",
     "uuid": "^11.0.3"
   },
-  "homepage": "./",
   "author": "",
   "license": "ISC",
   "description": "",
