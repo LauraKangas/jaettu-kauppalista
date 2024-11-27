@@ -32,22 +32,29 @@ const ItemLists = () => {
   useEffect(() => {
     const fetchLists = async () => {
       if (!userPin) return;
-
+  
       try {
         const listsCollection = await getDocs(collection(db, 'lists'));
         const lists = listsCollection.docs
-          .filter(doc => doc.data().visibleTo.includes(userPin))
-          .map(doc => ({ ...doc.data(), id: doc.id }));
+        .filter(doc => doc.data().visibleTo.includes(userPin))
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          favorites: Array.isArray(doc.data().favorites) ? doc.data().favorites : [],
+          isFavorite: Array.isArray(doc.data().favorites) && doc.data().favorites.includes(userPin), 
+        }));
+      
 
-        setNoteItems(lists);
+        const sortedLists = lists.sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
+        setNoteItems(sortedLists);
       } catch (error) {
         enqueueSnackbar('Virhe listojen hakemisessa: ' + error.message, { variant: 'error' });
       }
     };
-
+  
     fetchLists();
   }, [userPin, enqueueSnackbar]);
-
+  
   const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
 
   const handleCreateList = async () => {
@@ -89,30 +96,27 @@ const ItemLists = () => {
   const handleToggleFavorite = async (list) => {
     const favorites = Array.isArray(list.favorites) ? list.favorites : [];
     const isFavorite = favorites.includes(userPin);
+
+    const updatedList = {
+      ...list,
+      favorites: isFavorite
+        ? list.favorites.filter(pin => pin !== userPin)  
+        : [...list.favorites, userPin],  
+      isFavorite: !isFavorite  
+    };
   
-    // Update local state immediately
     setNoteItems(prevItems =>
-      prevItems.map(item =>
-        item.id === list.id
-          ? {
-              ...item,
-              favorites: isFavorite
-                ? item.favorites.filter(pin => pin !== userPin)  // Remove from favorites
-                : [...item.favorites, userPin],  // Add to favorites
-              isFavorite: !isFavorite  // Update isFavorite flag for sorting
-            }
-          : item
-      ).sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))  // Sort by isFavorite, placing favorite lists at the top
+      prevItems
+        .map(item => item.id === list.id ? updatedList : item) 
+        .sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))  
     );
-  
-    // Update Firestore
+
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
-        isFavorite: !isFavorite  // Ensure that Firestore also knows the favorite status
+        isFavorite: !isFavorite 
       });
     } catch (error) {
-      // If update failed, revert local state changes
       setNoteItems(prevItems =>
         prevItems.map(item =>
           item.id === list.id
@@ -123,7 +127,7 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
     }
   };
-  
+    
   const handleToggleHide = async (list) => {
     const hiddenBy = Array.isArray(list.hiddenBy) ? list.hiddenBy : []; 
     const isHidden = hiddenBy.includes(userPin);
