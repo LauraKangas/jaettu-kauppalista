@@ -259,6 +259,23 @@ const ItemLists = () => {
         />
         <Button onClick={handleJoinListByCode}>Liity</Button>
       </Stack>
+      {noteItems &&
+      noteItems
+        .filter(item => item.hiddenBy.includes(userPin)) 
+        .sort((a, b) => b.favorites.length - a.favorites.length) 
+        .map((item) => (
+          <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
+            <IconButton onClick={() => handleToggleFavorite(item)}>
+              {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+            </IconButton>
+            <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+              {capitalize(item.content)} (Hidden)
+            </Link>
+            <IconButton onClick={() => handleToggleHide(item)}>
+              {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
+            </IconButton>
+          </li>
+      ))}
     </div>
   );
 };
