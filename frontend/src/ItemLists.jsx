@@ -87,27 +87,32 @@ const ItemLists = () => {
   };
 
   const handleToggleFavorite = async (list) => {
-    const favorites = Array.isArray(list.favorites) ? list.favorites : [];  // Ensure favorites is an array
+    const favorites = Array.isArray(list.favorites) ? list.favorites : [];
     const isFavorite = favorites.includes(userPin);
-
+  
+    // Update local state immediately
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
           ? {
               ...item,
               favorites: isFavorite
-                ? item.favorites.filter(pin => pin !== userPin)
-                : [...item.favorites, userPin],
+                ? item.favorites.filter(pin => pin !== userPin)  // Remove from favorites
+                : [...item.favorites, userPin],  // Add to favorites
+              isFavorite: !isFavorite  // Update isFavorite flag for sorting
             }
           : item
-      )
+      ).sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))  // Sort by isFavorite, placing favorite lists at the top
     );
-
+  
+    // Update Firestore
     try {
       await updateDoc(doc(db, 'lists', list.id), {
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
+        isFavorite: !isFavorite  // Ensure that Firestore also knows the favorite status
       });
     } catch (error) {
+      // If update failed, revert local state changes
       setNoteItems(prevItems =>
         prevItems.map(item =>
           item.id === list.id
@@ -118,9 +123,9 @@ const ItemLists = () => {
       enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
     }
   };
-
+  
   const handleToggleHide = async (list) => {
-    const hiddenBy = Array.isArray(list.hiddenBy) ? list.hiddenBy : [];  // Ensure hiddenBy is an array
+    const hiddenBy = Array.isArray(list.hiddenBy) ? list.hiddenBy : []; 
     const isHidden = hiddenBy.includes(userPin);
 
     setNoteItems(prevItems =>
@@ -212,8 +217,7 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
           noteItems
-            .filter(item => !(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  // Ensure hiddenBy is an array
-            .sort((a, b) => (Array.isArray(b.favorites) ? b.favorites.length : 0) - (Array.isArray(a.favorites) ? a.favorites.length : 0))  // Handle undefined favorites
+            .filter(item => !(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
                 <IconButton onClick={() => handleToggleFavorite(item)}>
@@ -261,13 +265,9 @@ const ItemLists = () => {
       <ul>
         {noteItems &&
           noteItems
-            .filter(item => (Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  // Ensure hiddenBy is an array
-            .sort((a, b) => (Array.isArray(b.favorites) ? b.favorites.length : 0) - (Array.isArray(a.favorites) ? a.favorites.length : 0))  // Handle undefined favorites
+            .filter(item => (Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin))  
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
-                <IconButton onClick={() => handleToggleFavorite(item)}>
-                  {(Array.isArray(item.favorites) ? item.favorites : []).includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-                </IconButton>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
                   {capitalize(item.content)} (Hidden)
                 </Link>

@@ -11,6 +11,7 @@ import ArrowBack from '@mui/icons-material/ArrowBack';
 import Checkbox from '@mui/material/Checkbox';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
+import ContentCopy from '@mui/icons-material/ContentCopy';
 import { validateItemContent, checkForDuplicateItem } from './validations';
 
 const ListView = () => {
@@ -224,8 +225,12 @@ const ListView = () => {
       <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
         {capitalize(listUpdates.content)}
       </Typography>
+      <Stack direction="row" spacing={1} alignItems="center" mb={1}>
       <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
-      <Button onClick={handleCopyCode}>Copy Code</Button>
+      <Button onClick={handleCopyCode}>
+        <ContentCopy style={{ fontSize: 15 }} />
+      </Button>
+      </Stack>
 
       <ul>
         {listUpdates.items
