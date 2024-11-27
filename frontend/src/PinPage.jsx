@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from './utils/firebase/app'; 
 import { setDoc, doc, getDoc } from 'firebase/firestore';
@@ -11,6 +11,13 @@ const PinPage = () => {
   const [inputPin, setInputPin] = useState('');
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar(); 
+
+  useEffect(() => {
+    const savedPin = localStorage.getItem('userPin');
+    if (savedPin) {
+      navigate('/lists');
+    }
+  }, [navigate]);
 
   const generatePin = async () => {
     const pin = generateSixDigitPin(); 
