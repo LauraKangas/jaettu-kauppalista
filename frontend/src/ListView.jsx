@@ -17,7 +17,7 @@ const ListView = () => {
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
-  const userPin = localStorage.getItem('userPin');
+  const userPin = localStorage.getItem('userPin');  
 
   const [listUpdates, setListUpdates] = useState(null);
   const [newItem, setNewItem] = useState('');
@@ -25,8 +25,10 @@ const ListView = () => {
   const [editedItemContent, setEditedItemContent] = useState('');
 
   useEffect(() => {
-    setListUpdates(state.list)
-  }, [])
+    if (state && state.list) {
+      setListUpdates(state.list);
+    }
+  }, [state]);
 
   const handleDeleteList = async () => {
     try {
@@ -38,7 +40,7 @@ const ListView = () => {
   
         if (listData.visibleTo.includes(userPin)) {
           await updateDoc(listDocRef, {
-            visibleTo: arrayRemove(userPin),  
+            visibleTo: arrayRemove(userPin),
           });
         }
         setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
@@ -78,7 +80,7 @@ const ListView = () => {
         items: arrayUnion(newItemObject),
       });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList);
       setNewItem('');
     } catch (error) {
       enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
@@ -94,9 +96,9 @@ const ListView = () => {
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList);
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
     }
@@ -126,20 +128,17 @@ const ListView = () => {
 
     const updatedList = {
       ...listUpdates,
-      items: listUpdates.items.map(item => ({
-        ...item,
-        content: item.content === editingItem.content
-          ? editedItemContent.toLowerCase()
-          : item.content.toLowerCase(),
-      }))
-    }
+      items: listUpdates.items.map(item => (item.content === editingItem.content
+        ? { ...item, content: editedItemContent.toLowerCase() }
+        : item))
+    };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList);
       setEditingItem(null);
       setEditedItemContent('');
     } catch (error) {
@@ -153,25 +152,23 @@ const ListView = () => {
       ...listUpdates,
       items: listUpdates.items.map(item => ({
         ...item,
-        isChecked: item.content === itemToToggle.content
-          ? !item.isChecked
-          : item.isChecked,
+        isChecked: item.content === itemToToggle.content ? !item.isChecked : item.isChecked,
       }))
-    }
+    };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList);
     } catch (error) {
       console.error('Error updating checkbox: ', error);
       enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
     }
   };
 
-  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`
+  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
   
   if (!listUpdates) {
     return <div>Loading...</div>;
@@ -185,54 +182,54 @@ const ListView = () => {
       <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
         {capitalize(listUpdates.content)}
       </Typography>
-      <p>Liittymisavain: <strong>{ listUpdates.code }</strong></p>
+      <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
 
       <ul>
-      {listUpdates.items.map((item, index) => (
-        <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <Checkbox
-            checked={item.isChecked || false} 
-            onChange={() => handleCheckboxChange(item)} 
-          />
-
-          {editingItem && editingItem.content === item.content ? (
-            <TextField
-              autoFocus
-              size="small"
-              value={editedItemContent}
-              onChange={(e) => setEditedItemContent(e.target.value)}
-              onBlur={handleSaveEditedItem}
-              onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()}
+        {listUpdates.items.map((item, index) => (
+          <li key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+            <Checkbox
+              checked={item.isChecked || false}
+              onChange={() => handleCheckboxChange(item)} 
             />
-          ) : (
-            <span
-              style={{
-                flexGrow: 1,
-                marginLeft: '8px',
-                textDecoration: item.isChecked ? 'line-through' : 'none', 
-              }}
-            >
-              {capitalize(item.content)}
-            </span>
-          )}
+            {editingItem && editingItem.content === item.content ? (
+              <TextField
+                autoFocus
+                size="small"
+                value={editedItemContent}
+                onChange={(e) => setEditedItemContent(e.target.value)}
+                onBlur={handleSaveEditedItem}
+                onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()}
+              />
+            ) : (
+              <span
+                style={{
+                  flexGrow: 1,
+                  marginLeft: '8px',
+                  textDecoration: item.isChecked ? 'line-through' : 'none', 
+                }}
+              >
+                {capitalize(item.content)}
+              </span>
+            )}
 
-          {!editingItem || editingItem.content !== item.content ? (
-            <Button onClick={() => handleEditItem(item)}>
-              <EditIcon />
+            {!editingItem || editingItem.content !== item.content ? (
+              <Button onClick={() => handleEditItem(item)}>
+                <EditIcon />
+              </Button>
+            ) : (
+              <>
+                <Button onClick={handleSaveEditedItem}>Save</Button>
+                <Button onClick={handleCancelEdit}>Cancel</Button>
+              </>
+            )}
+
+            <Button onClick={() => handleDeleteItem(item)}>
+              <DeleteIcon />
             </Button>
-          ) : (
-            <>
-              <Button onClick={handleSaveEditedItem}>Save</Button>
-              <Button onClick={handleCancelEdit}>Cancel</Button>
-            </>
-          )}
+          </li>
+        ))}
+      </ul>
 
-          <Button onClick={() => handleDeleteItem(item)}>
-            <DeleteIcon />
-          </Button>
-        </li>
-      ))}
-    </ul>
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <TextField
           label="Uusi tuote"
