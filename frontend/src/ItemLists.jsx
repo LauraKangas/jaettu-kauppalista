@@ -68,6 +68,7 @@ const ItemLists = () => {
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       visibleTo: [userPin],
       isFavorite: false,
+      hiddenBy: [],
     };
 
     try {
@@ -207,10 +208,12 @@ const ItemLists = () => {
       <LogOut onLogout={handleLogout} />
       <h1>Listasi</h1>
       <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
+      
       <ul>
+        {/* Visible lists */}
         {noteItems &&
           noteItems
-            .filter(item => !(item.hiddenBy || []).includes(userPin)) 
+            .filter(item => !(item.hiddenBy || []).includes(userPin)) // Filter out hidden lists for the current user
             .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length)
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
@@ -226,6 +229,7 @@ const ItemLists = () => {
               </li>
             ))}
       </ul>
+
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <TextField
           label="Listan nimi"
@@ -254,28 +258,33 @@ const ItemLists = () => {
         />
         <Button onClick={handleJoinListByCode}>Liity</Button>
       </Stack>
-      {noteItems &&
-      noteItems
-        .filter(item => item.hiddenBy.includes(userPin)) 
-        .sort((a, b) => b.favorites.length - a.favorites.length) 
-        .map((item) => (
-          <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
-            <IconButton onClick={() => handleToggleFavorite(item)}>
-              {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-            </IconButton>
-            <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-              {capitalize(item.content)} (Hidden)
-            </Link>
-            <IconButton onClick={() => handleToggleHide(item)}>
-              {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
-            </IconButton>
-          </li>
-      ))}
+
+      <ul>
+        {/* Hidden lists */}
+        {noteItems &&
+        noteItems
+          .filter(item => item.hiddenBy.includes(userPin))  // Filter only hidden lists for the current user
+          .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length) 
+          .map((item) => (
+            <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
+              <IconButton onClick={() => handleToggleFavorite(item)}>
+                {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+              </IconButton>
+              <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+                {capitalize(item.content)} (Hidden)
+              </Link>
+              <IconButton onClick={() => handleToggleHide(item)}>
+                {item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />} 
+              </IconButton>
+            </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
 export default ItemLists;
+
 
 
 
