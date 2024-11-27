@@ -25,8 +25,8 @@ const ListView = () => {
   const [editedItemContent, setEditedItemContent] = useState('');
 
   useEffect(() => {
-    setListUpdates(state.list)
-  }, [])
+    setListUpdates(state.list);
+  }, [state.list]);
 
   const handleDeleteList = async () => {
     try {
@@ -41,7 +41,7 @@ const ListView = () => {
             visibleTo: arrayRemove(userPin),  
           });
         }
-        setListUpdates(prevItems => prevItems.filter(item => item.id !== id));
+        setListUpdates(null); 
   
         enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
         navigate('/lists');  
@@ -78,7 +78,7 @@ const ListView = () => {
         items: arrayUnion(newItemObject),
       });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList); 
       setNewItem('');
     } catch (error) {
       enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
@@ -94,9 +94,9 @@ const ListView = () => {
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList); 
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
     }
@@ -132,18 +132,17 @@ const ListView = () => {
           ? editedItemContent.toLowerCase()
           : item.content.toLowerCase(),
       }))
-    }
+    };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList); 
       setEditingItem(null);
       setEditedItemContent('');
     } catch (error) {
-      console.error('Error updating checkbox: ', error);
       enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
     }
   };
@@ -157,22 +156,21 @@ const ListView = () => {
           ? !item.isChecked
           : item.isChecked,
       }))
-    }
+    };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
         items: updatedList.items,
-      })
+      });
 
-      setListUpdates(updatedList)
+      setListUpdates(updatedList); 
     } catch (error) {
-      console.error('Error updating checkbox: ', error);
       enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
     }
   };
 
-  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`
-  
+  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
+
   if (!listUpdates) {
     return <div>Loading...</div>;
   }
