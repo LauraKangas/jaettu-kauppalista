@@ -202,6 +202,16 @@ const ListView = () => {
 
   const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
 
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(listUpdates.code)
+      .then(() => {
+        enqueueSnackbar('Koodi kopioitu leikepöydälle!', { variant: 'success' });
+      })
+      .catch((error) => {
+        enqueueSnackbar('Virhe koodin kopioinnissa: ' + error.message, { variant: 'error' });
+      });
+  };
+
   if (!listUpdates) {
     return <div>Loading...</div>;
   }
@@ -215,6 +225,7 @@ const ListView = () => {
         {capitalize(listUpdates.content)}
       </Typography>
       <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
+      <Button onClick={handleCopyCode}>Copy Code</Button>
 
       <ul>
         {listUpdates.items

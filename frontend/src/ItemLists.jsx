@@ -138,7 +138,7 @@ const ItemLists = () => {
 
     try {
       await updateDoc(doc(db, 'lists', list.id), {
-        hiddenBy: isHidden ? arrayRemove(userPin) : arrayUnion(userPin),
+        hiddenBy: isHidden ? arrayRemove.includes(userPin) : arrayUnion.includes(userPin),
       });
     } catch (error) {
       setNoteItems(prevItems =>
@@ -210,10 +210,9 @@ const ItemLists = () => {
       <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
       
       <ul>
-        {/* Visible lists */}
         {noteItems &&
           noteItems
-            .filter(item => !(item.hiddenBy || []).includes(userPin)) // Filter out hidden lists for the current user
+            .filter(item => !(item.hiddenBy || []).includes(userPin)) 
             .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length)
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
@@ -260,10 +259,9 @@ const ItemLists = () => {
       </Stack>
 
       <ul>
-        {/* Hidden lists */}
         {noteItems &&
         noteItems
-          .filter(item => item.hiddenBy.includes(userPin))  // Filter only hidden lists for the current user
+          .filter(item => item.hiddenBy.includes(userPin))  
           .sort((a, b) => (b.favorites || []).length - (a.favorites || []).length) 
           .map((item) => (
             <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
