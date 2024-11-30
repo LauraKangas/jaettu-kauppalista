@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import ArrowBack from '@mui/icons-material/ArrowBack'
 
 const UserManual = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const UserManual = () => {
         onClick={() => navigate('/')}
         style={{ marginTop: '20px' }}
       >
-        Takaisin
+        <ArrowBack />Takaisin
       </Button>
     </div>
   );

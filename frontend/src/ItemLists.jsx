@@ -207,14 +207,8 @@ const ItemLists = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('userPin');
-    navigate('/');
-  };
-
   return (
     <div>
-      <LogOut onLogout={handleLogout} />
       <h1>Listasi</h1>
       <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
       

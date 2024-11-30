@@ -5,6 +5,7 @@ import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { Button } from '@mui/material';
 import { useSnackbar } from 'notistack'; 
 import LoginIcon from '@mui/icons-material/Login';
+import Key from '@mui/icons-material/Key'
 
 const PinPage = () => {
   const [generatedPin, setGeneratedPin] = useState('');
@@ -69,11 +70,6 @@ const PinPage = () => {
       <h2>Tervetuloa!</h2>
       <p>Alla voit kirjautua käyttäjäkoodillasi. Uniikin koodisi avulla 
         voit hallinnoida ja jakaa luomiasi listoja ystäviesi kanssa!</p>
-      <Button
-        onClick={() => navigate('/user-manual')}
-      >
-        Käyttäjäopas
-      </Button>
         <div>
         <h3>Kirjaudu sisään</h3>
         <input
@@ -90,7 +86,7 @@ const PinPage = () => {
       <p>Ei vielä käyttäjäkoodia? Luo se alla ja olet valmis käyttämään listoja!</p>
     
       <div>
-        <Button onClick={generatePin}>Luo käyttäjäkoodi</Button>
+        <Button onClick={generatePin}>Luo käyttäjäkoodi <Key /></Button>
         {generatedPin && (
           <div>
             <p>Käyttäjäkoodisi on: <strong>{generatedPin}</strong></p>
