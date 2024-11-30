@@ -1,31 +1,45 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Switch, Button } from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { AppBar, Toolbar, Typography, IconButton, Switch, Menu, MenuItem } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogOut from '@mui/icons-material/Logout';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from 'react-router-dom';
 
 const AppsBar = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const isMenuOpen = Boolean(anchorEl);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
   };
 
   const navigateToUserManual = () => {
-    navigate('/user-manual'); 
+    navigate('/user-manual');
+    handleMenuClose();
   };
 
   const handleLogout = () => {
     localStorage.removeItem('userPin');
     navigate('/');
+    handleMenuClose();
   };
 
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Listat
         </Typography>
 
@@ -34,6 +48,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
           color="inherit"
           onClick={handleDarkModeToggle}
           sx={{ mr: 2 }}
+          aria-label="Toggle Dark Mode"
         >
           {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>
@@ -41,26 +56,36 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
           checked={darkMode}
           onChange={handleDarkModeToggle}
           color="default"
+          aria-label="Dark Mode Switch"
         />
-   
-        <Button
-          color="inherit"
-          startIcon={<LogOut />}
-          onClick={handleLogout}
-        >
-          Kirjaudu ulos
-        </Button>
 
-        <Button
+        <IconButton
           color="inherit"
-          startIcon={<MenuBookIcon />}
-          onClick={navigateToUserManual}
+          onClick={handleMenuOpen}
+          aria-label="Open Menu"
         >
-          Käyttäjäopas
-        </Button>
+          <MenuIcon />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={isMenuOpen}
+          onClose={handleMenuClose}
+          aria-label="Main Menu"
+        >
+          <MenuItem onClick={navigateToUserManual}>
+            <MenuBookIcon sx={{ mr: 1 }} />
+            Käyttäjäopas
+          </MenuItem>
+          <MenuItem onClick={handleLogout}>
+            <LogOut sx={{ mr: 1 }} />
+            Kirjaudu ulos
+          </MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );
 };
 
 export default AppsBar;
+
+
