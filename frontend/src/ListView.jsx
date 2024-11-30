@@ -26,13 +26,19 @@ const ListView = () => {
   const [newItem, setNewItem] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [editedItemContent, setEditedItemContent] = useState('');
+  const [sharedCount, setSharedCount] = useState(0);
 
   const fetchList = async () => {
     try {
       const listDocRef = doc(db, 'lists', id);
       const listDoc = await getDoc(listDocRef);
       if (listDoc.exists()) {
-        setListUpdates(listDoc.data());
+        const listData = listDoc.data();
+        setListUpdates(listData);
+
+        if (Array.isArray(listData.visibleTo)) {
+          setSharedCount(listData.visibleTo.length);
+        }
       } else {
         enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
       }
@@ -231,7 +237,9 @@ const ListView = () => {
         <ContentCopy style={{ fontSize: 15 }} />
       </Button>
       </Stack>
-
+      <Typography variant='subtitle1' color="textSecondary">
+        Jaettu {sharedCount} henkilölle
+      </Typography>
       <ul>
         {listUpdates.items
           .sort((a, b) => b.isFavorite - a.isFavorite)

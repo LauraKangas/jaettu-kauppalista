@@ -273,7 +273,7 @@ const ItemLists = () => {
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                  {capitalize(item.content)} (Hidden)
+                  {capitalize(item.content)} (Piilotettu)
                 </Link>
                 <IconButton onClick={() => handleToggleHide(item)}>
                   {(Array.isArray(item.hiddenBy) ? item.hiddenBy : []).includes(userPin) ? <Visibility /> : <VisibilityOff />} 

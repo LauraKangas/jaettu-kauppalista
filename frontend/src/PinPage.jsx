@@ -69,6 +69,11 @@ const PinPage = () => {
       <h2>Tervetuloa!</h2>
       <p>Alla voit kirjautua käyttäjäkoodillasi. Uniikin koodisi avulla 
         voit hallinnoida ja jakaa luomiasi listoja ystäviesi kanssa!</p>
+      <Button
+        onClick={() => navigate('/user-manual')}
+      >
+        Käyttäjäopas
+      </Button>
         <div>
         <h3>Kirjaudu sisään</h3>
         <input
