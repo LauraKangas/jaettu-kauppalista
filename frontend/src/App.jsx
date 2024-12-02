@@ -24,7 +24,6 @@ const App = () => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // Creating the theme dynamically based on darkMode state
   const theme = createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
@@ -35,7 +34,6 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {/* Pass darkMode and setDarkMode correctly */}
         <AppsBar darkMode={darkMode} setDarkMode={setDarkMode} />
         <div className="container">
           <Routes>
