@@ -50,7 +50,7 @@
 }
 
 body.dark-mode {
-  background-image: url('\src\data\taustakuva_dark.png');
+  background-image: url('/src/data/taustakuva_dark.png');
   --container-bg-color: rgba(30, 30, 30, 0.9);
   --text-color: #fff;
   --button-bg-color: #333;
@@ -64,7 +64,7 @@ body.dark-mode {
 /* Bodyasettelu */
 body {
   font-family: 'Outfit', sans-serif;
-  background-image: url('\src\data\taustakuva.png');
+  background-image: url('/src/data/taustakuva.png');
   /* Light moden taustakuva */
   background-size: cover;
   background-position: center;
