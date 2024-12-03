@@ -90,8 +90,13 @@ body::before {
 }*/
 
 .container {
-  max-width: 800px;
-  margin: 20px auto;
+  width: 800px;
+  height: 800px;
+  margin: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: var(--container-bg-color);
   padding: 20px;
   border-radius: 8px;
@@ -172,4 +177,8 @@ button:focus {
   color: var(--secondary-text-color);
   margin-top: 20px;
   transition: color var(--transition);
+}
+
+.Appsbar {
+  background-color: #a2d3a4;
 }

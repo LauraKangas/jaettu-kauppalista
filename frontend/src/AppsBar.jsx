@@ -6,6 +6,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogOut from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from 'react-router-dom';
+import './index.css';
 
 const AppsBar = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" className="Appbar">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Listat
