@@ -90,8 +90,13 @@ body::before {
 }*/
 
 .container {
-  max-width: 800px;
-  margin: 20px auto;
+  width: 800px;
+  height: 800px;
+  margin: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: var(--container-bg-color);
   padding: 20px;
   border-radius: 8px;
@@ -174,6 +179,7 @@ button:focus {
   transition: color var(--transition);
 }
 
+<<<<<<< HEAD
 .custom-app-bar-light.MuiAppBar-root {
   background-color: #5f8560; 
   color: white;
@@ -184,3 +190,8 @@ button:focus {
   color: white;
 }
 
+=======
+.Appsbar {
+  background-color: #a2d3a4;
+}
+>>>>>>> 2cb20aac03152c88af3b953b73e52bbce0fa1c9c

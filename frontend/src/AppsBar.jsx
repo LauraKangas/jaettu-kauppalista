@@ -6,7 +6,11 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogOut from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import "./index.css";
+=======
+import './index.css';
+>>>>>>> 2cb20aac03152c88af3b953b73e52bbce0fa1c9c
 
 const AppsBar = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
@@ -38,10 +42,14 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
   };
 
   return (
+<<<<<<< HEAD
     <AppBar
         position="static"
         className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
         >
+=======
+    <AppBar position="static" className="Appbar">
+>>>>>>> 2cb20aac03152c88af3b953b73e52bbce0fa1c9c
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Listat
