@@ -173,3 +173,14 @@ button:focus {
   margin-top: 20px;
   transition: color var(--transition);
 }
+
+.custom-app-bar-light.MuiAppBar-root {
+  background-color: #5f8560; 
+  color: white;
+}
+
+.custom-app-bar-dark.MuiAppBar-root {
+  background-color: #333; 
+  color: white;
+}
+
