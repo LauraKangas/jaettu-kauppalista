@@ -279,17 +279,20 @@ const ListView = () => {
           </Button>
         </Stack>
       )}
-
-      <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+  
+      <Stack direction="row" spacing={1} alignItems="center" mb={2} justifyContent="center">
         <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
         <Button onClick={handleCopyCode}>
           <ContentCopy style={{ fontSize: 15 }} />
         </Button>
       </Stack>
+  
+      <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+        <Typography variant='subtitle1' color="textSecondary">
+          Jaettu {sharedCount - 1} henkilölle
+        </Typography>
+      </Stack>
 
-      <Typography variant='subtitle1' color="textSecondary">
-        Jaettu {sharedCount - 1} henkilölle
-      </Typography>
       <ul>
         {listUpdates.items
           .sort((a, b) => b.isFavorite - a.isFavorite)

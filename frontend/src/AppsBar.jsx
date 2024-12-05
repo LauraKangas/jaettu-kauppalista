@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Switch, ListItemText, ListItemIcon } from '@mui/material';
+import { AppBar, Toolbar, IconButton, Menu, MenuItem, Switch, ListItemText, ListItemIcon } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogOut from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { useNavigate, useLocation } from 'react-router-dom';  
-import "./index.css";
+import { useNavigate, useLocation } from 'react-router-dom';
+import './index.css';
 
 const AppsBar = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
-  const location = useLocation();  
+  const location = useLocation();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const isMenuOpen = Boolean(anchorEl);
@@ -46,14 +46,27 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
       className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
     >
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Listfun
-        </Typography>
+        <img
+          src="/listfun.png" 
+          alt="Listfun Logo"
+          style={{
+            height: 100,
+            width: 280, 
+            position: 'absolute',
+            left: '10%',
+            top: '-15px', 
+
+          }}
+        />
 
         <IconButton
           color="inherit"
           onClick={handleMenuOpen}
           aria-label="Open Menu"
+          style={{
+            position: 'absolute',
+            right: 30,
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -97,4 +110,5 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
 };
 
 export default AppsBar;
+
 

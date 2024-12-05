@@ -209,9 +209,10 @@ const ItemLists = () => {
 
   return (
     <div>
-      <h1>Listasi</h1>
-      <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
-      
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1>Listasi</h1>
+        <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
+      </div>
       <ul>
         {noteItems &&
           noteItems
