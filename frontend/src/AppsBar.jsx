@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Switch, Menu, MenuItem } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Switch, ListItemText, ListItemIcon } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -39,29 +39,13 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
 
   return (
     <AppBar
-        position="static"
-        className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
-        >
+      position="static"
+      className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
+    >
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Listat
+          Listfun
         </Typography>
-
-        <IconButton
-          edge="end"
-          color="inherit"
-          onClick={handleDarkModeToggle}
-          sx={{ mr: 2 }}
-          aria-label="Toggle Dark Mode"
-        >
-          {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-        </IconButton>
-        <Switch
-          checked={darkMode}
-          onChange={handleDarkModeToggle}
-          color="default"
-          aria-label="Dark Mode Switch"
-        />
 
         <IconButton
           color="inherit"
@@ -70,19 +54,36 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
         >
           <MenuIcon />
         </IconButton>
+
         <Menu
           anchorEl={anchorEl}
           open={isMenuOpen}
           onClose={handleMenuClose}
           aria-label="Main Menu"
         >
+          <MenuItem onClick={handleDarkModeToggle}>
+            <ListItemIcon>
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+            </ListItemIcon>
+            <ListItemText>Tumma tila</ListItemText>
+            <Switch
+              checked={darkMode}
+              onChange={handleDarkModeToggle}
+              color="default"
+              edge="end"
+            />
+          </MenuItem>
           <MenuItem onClick={navigateToUserManual}>
-            <MenuBookIcon sx={{ mr: 1 }} />
-            Käyttäjäopas
+            <ListItemIcon>
+              <MenuBookIcon />
+            </ListItemIcon>
+            <ListItemText>Käyttäjäopas</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleLogout}>
-            <LogOut sx={{ mr: 1 }} />
-            Kirjaudu ulos
+            <ListItemIcon>
+              <LogOut />
+            </ListItemIcon>
+            <ListItemText>Kirjaudu ulos</ListItemText>
           </MenuItem>
         </Menu>
       </Toolbar>
@@ -91,5 +92,4 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
 };
 
 export default AppsBar;
-
 

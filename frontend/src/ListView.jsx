@@ -12,6 +12,7 @@ import Checkbox from '@mui/material/Checkbox';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ContentCopy from '@mui/icons-material/ContentCopy';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { validateItemContent, checkForDuplicateItem } from './validations';
 
 const ListView = () => {
@@ -27,6 +28,12 @@ const ListView = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [editedItemContent, setEditedItemContent] = useState('');
   const [sharedCount, setSharedCount] = useState(0);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditingListName, setIsEditingListName] = useState(false); 
+  const [editedListName, setEditedListName] = useState(''); 
+
+  const handleDialogOpen = () => setIsDialogOpen(true);
+  const handleDialogClose = () => setIsDialogOpen(false);
 
   const fetchList = async () => {
     try {
@@ -35,7 +42,7 @@ const ListView = () => {
       if (listDoc.exists()) {
         const listData = listDoc.data();
         setListUpdates(listData);
-
+        setEditedListName(listData.content); 
         if (Array.isArray(listData.visibleTo)) {
           setSharedCount(listData.visibleTo.length);
         }
@@ -51,21 +58,21 @@ const ListView = () => {
     fetchList();
   }, [id]);
 
-  const handleDeleteList = async () => {
+  const handleDeleteListConfirmed = async () => {
     try {
       const listDocRef = doc(db, 'lists', id);
       const listDoc = await getDoc(listDocRef);
-
+  
       if (listDoc.exists()) {
         const listData = listDoc.data();
-
+  
         if (listData.visibleTo.includes(userPin)) {
           await updateDoc(listDocRef, {
             visibleTo: arrayRemove(userPin),
           });
         }
         setListUpdates(null);
-
+  
         enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
         navigate('/lists');
       } else {
@@ -73,11 +80,39 @@ const ListView = () => {
       }
     } catch (error) {
       enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
+    } finally {
+      handleDialogClose(); 
     }
   };
 
+  const handleEditListName = async () => {
+    if (editedListName.trim()) {
+      try {
+        await updateDoc(doc(db, 'lists', id), {
+          content: editedListName,
+        });
+
+        enqueueSnackbar('Listan nimi päivitetty.', { variant: 'success' });
+        setListUpdates(prev => ({ ...prev, content: editedListName }));
+        setIsEditingListName(false);
+      } catch (error) {
+        enqueueSnackbar('Virhe listan nimen päivittämisessä: ' + error.message, { variant: 'error' });
+      }
+    } else {
+      enqueueSnackbar('Listan nimi ei voi olla tyhjä.', { variant: 'error' });
+    }
+  };
+
+  const handleCancelEditListName = () => {
+    setEditedListName(listUpdates.content);
+    setIsEditingListName(false);
+  };
+
   const handleAddItem = async () => {
-    if (!newItem) return;
+    if (!newItem) {
+      enqueueSnackbar('Tuote ei voi olla tyhjä.', { variant: 'error' });
+      return;
+    }
 
     const validation = validateItemContent(newItem);
     if (!validation.isValid) {
@@ -90,7 +125,7 @@ const ListView = () => {
       return;
     }
 
-    const newItemObject = { content: newItem.toLowerCase(), isChecked: false, isFavorite: false };
+    const newItemObject = { content: newItem, isChecked: false, isFavorite: false };
 
     try {
       await updateDoc(doc(db, 'lists', id), {
@@ -143,8 +178,8 @@ const ListView = () => {
       items: listUpdates.items.map(item => ({
         ...item,
         content: item.content === editingItem.content
-          ? editedItemContent.toLowerCase()
-          : item.content.toLowerCase(),
+          ? editedItemContent
+          : item.content,
       })),
     };
 
@@ -182,11 +217,6 @@ const ListView = () => {
   };
 
   const handleToggleFavorite = async (itemToToggle) => {
-    if (!itemToToggle || !itemToToggle.content) {
-      enqueueSnackbar('Virhe: Tuotteen tietoja ei löytynyt.', { variant: 'error' });
-      return;
-    }
-
     const updatedList = {
       ...listUpdates,
       items: listUpdates.items.map(item =>
@@ -207,8 +237,6 @@ const ListView = () => {
     }
   };
 
-  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
-
   const handleCopyCode = () => {
     navigator.clipboard.writeText(listUpdates.code)
       .then(() => {
@@ -228,24 +256,47 @@ const ListView = () => {
       <Button onClick={() => navigate('/lists')}>
         <ArrowBack />
       </Button>
-      <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
-        {capitalize(listUpdates.content)}
-      </Typography>
+      {isEditingListName ? (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            variant="outlined"
+            color='black'
+            size="small"
+            value={editedListName}
+            onChange={(e) => setEditedListName(e.target.value)}
+            onBlur={handleEditListName}
+            onKeyPress={(e) => e.key === 'Enter' && handleEditListName()}
+          />
+          <Button onClick={handleCancelEditListName}>Cancel</Button>
+        </Stack>
+      ) : (
+        <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {listUpdates.content}
+          </Typography>
+          <Button onClick={() => setIsEditingListName(true)}>
+            <EditIcon />
+          </Button>
+        </Stack>
+      )}
+
       <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-      <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
-      <Button onClick={handleCopyCode}>
-        <ContentCopy style={{ fontSize: 15 }} />
-      </Button>
+        <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
+        <Button onClick={handleCopyCode}>
+          <ContentCopy style={{ fontSize: 15 }} />
+        </Button>
       </Stack>
+
       <Typography variant='subtitle1' color="textSecondary">
-        Jaettu {sharedCount} henkilölle
+        Jaettu {sharedCount - 1} henkilölle
       </Typography>
       <ul>
         {listUpdates.items
           .sort((a, b) => b.isFavorite - a.isFavorite)
           .map(item => (
             <li key={item.content} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-              <Checkbox
+              <Checkbox 
+                color='grey'
                 checked={item.isChecked || false}
                 onChange={() => handleCheckboxChange(item)}
               />
@@ -254,7 +305,8 @@ const ListView = () => {
               </Button>
               {editingItem && editingItem.content === item.content ? (
                 <TextField
-                  autoFocus
+                  variant="outlined"
+                  color='black'
                   size="small"
                   value={editedItemContent}
                   onChange={(e) => setEditedItemContent(e.target.value)}
@@ -269,7 +321,7 @@ const ListView = () => {
                     textDecoration: item.isChecked ? 'line-through' : 'none',
                   }}
                 >
-                  {capitalize(item.content)}
+                  {item.content}
                 </span>
               )}
 
@@ -294,6 +346,8 @@ const ListView = () => {
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
         <TextField
           label="Uusi tuote"
+          variant="outlined"
+          color='black'
           size="small"
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
@@ -305,14 +359,32 @@ const ListView = () => {
         />
         <Button onClick={handleAddItem}>
           <AddIcon />
-        </Button>
+        </Button> 
       </Stack>
 
-      <Button startIcon={<DeleteIcon />} onClick={handleDeleteList}>
+      <Button onClick={handleDialogOpen}>
         Poista lista
       </Button>
+
+      <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+        <DialogTitle>Vahvista poisto</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Haluatko varmasti poistaa listan? Tämä toimenpide ei ole palautettavissa.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>
+            Peruuta
+          </Button>
+          <Button onClick={handleDeleteListConfirmed}>
+            Poista
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
 
 export default ListView;
+

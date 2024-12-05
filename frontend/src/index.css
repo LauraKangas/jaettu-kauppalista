@@ -14,7 +14,7 @@
 
   form input:focus,
   form textarea:focus {
-    outline: 2px solid #007bff;
+    outline: 2px solid #6f9a5b37;
   }
 
   button {
@@ -40,7 +40,7 @@
 :root {
   --container-bg-color: rgba(255, 255, 255, 0.9);
   --text-color: #333;
-  --button-bg-color: #d89b78;
+  --button-bg-color: #6f9a5b37;
   --button-text-color: #ffffff;
   --note-bg-color: #fefefe;
   --note-border-color: #ddd;
@@ -65,7 +65,6 @@ body.dark-mode {
 body {
   font-family: 'Outfit', sans-serif;
   background-image: url('/src/data/taustakuva.png');
-  /* Light moden taustakuva */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -90,13 +89,8 @@ body::before {
 }*/
 
 .container {
-  width: 800px;
-  height: 800px;
-  margin: auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  max-width: 800px;
+  margin: 20px auto;
   background-color: var(--container-bg-color);
   padding: 20px;
   border-radius: 8px;
@@ -109,7 +103,7 @@ form textarea {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
-  border-color: #a78552;
+  border-color: #6f9a5b37;
   outline: none;
   box-shadow: 0 0 5px rgba(124, 102, 53, 0.5);
   border-radius: 4px;
@@ -123,11 +117,11 @@ form input:focus,
 form textarea:focus {
   outline: 2px solid var(--button-bg-color);
   outline-offset: 2px;
-  box-shadow: 0 0 5px #007bff;
+  box-shadow: 0 0 5px #6f9a5b37;
 }
 
 button {
-  color: var(--button-text-color);
+  color:#fff;
   background-color: var(--button-bg-color);
   border: none;
   cursor: pointer;
@@ -137,14 +131,14 @@ button {
 }
 
 button:hover {
-  background-color: #e9c7a0;
+  background-color: #6f9a5b37;
   transform: scale(1.05);
 }
 
 button:focus {
   outline: 2px solid var(--button-bg-color);
   outline-offset: 2px;
-  box-shadow: 0 0 5px #007bff;
+  box-shadow: 0 0 5px #6f9a5b37;
 }
 
 .note-item {
@@ -177,6 +171,40 @@ button:focus {
   color: var(--secondary-text-color);
   margin-top: 20px;
   transition: color var(--transition);
+}
+
+input[type=text] {
+  border: 2px solid rgba(7, 54, 22, 0.315);
+  border-radius: 4px;
+}
+
+body:not(.dark-mode) a:link {
+  color: black;
+}
+
+body:not(.dark-mode) a:visited {
+  color: black;
+}
+
+body.dark-mode a:link {
+  color: white;
+}
+
+body.dark-mode a:visited {
+  color: white;
+}
+
+.MuiButton-root {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode .MuiButton-root {
+  color: white;
+
+}
+
+body:not(.dark-mode) .MuiButton-root {
+  color: black;
 }
 
 .custom-app-bar-light.MuiAppBar-root {

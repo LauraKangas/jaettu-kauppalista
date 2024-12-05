@@ -235,6 +235,7 @@ const ItemLists = () => {
         <TextField
           label="Listan nimi"
           variant="outlined"
+          color='black'
           size="small"
           value={newListContent}
           onChange={(e) => setNewListContent(e.target.value)}
@@ -253,9 +254,15 @@ const ItemLists = () => {
         <TextField
           label="Liity listalle koodilla"
           variant="outlined"
+          color='black'
           size="small"
           value={code}
           onChange={(e) => setCode(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleJoinListByCode();
+            }
+          }}
         />
         <Button onClick={handleJoinListByCode}>Liity</Button>
       </Stack>
