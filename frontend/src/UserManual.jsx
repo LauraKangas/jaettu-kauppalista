@@ -14,7 +14,10 @@ const UserManual = () => {
       >
         <ArrowBack />Takaisin
       </Button>
-      <h1>Käyttäjäopas</h1>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1>Käyttäjäopas</h1>
+      </div>
+      
       <p>
         Tämä opas auttaa sinua käyttämään sovellusta. Seuraamalla ohjeita voit hyödyntää kaikkia toimintoja ja saada kaiken irti sovelluksesta.
       </p>
