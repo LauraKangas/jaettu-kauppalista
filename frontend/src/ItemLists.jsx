@@ -9,7 +9,6 @@ import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-
 import { handleCreateList } from './functions/lists/handleCreateList';
 import { handleToggleFavorite } from './functions/lists/handleToggleFavorite';
 import { handleToggleHide } from './functions/lists/handleToggleHide';
@@ -41,10 +40,11 @@ const ItemLists = () => {
         const lists = listsCollection.docs
           .map(doc => {
             const data = doc.data();
+
             const visibleTo = Array.isArray(data.visibleTo) ? data.visibleTo : [];
             const hiddenBy = Array.isArray(data.hiddenBy) ? data.hiddenBy : [];
             const favorites = Array.isArray(data.favorites) ? data.favorites : [];
-
+  
             if (visibleTo.includes(userPin)) {
               return {
                 ...data,
@@ -57,7 +57,7 @@ const ItemLists = () => {
             return null;
           })
           .filter(doc => doc !== null);  
-
+  
         const sortedLists = lists.sort((a, b) => b.isFavorite - a.isFavorite);
         setNoteItems(sortedLists);
       } catch (error) {
@@ -78,22 +78,26 @@ const ItemLists = () => {
       </div>
 
       <ul>
-      {noteItems &&
-        noteItems
-          .filter(item => !(item.hiddenBy && item.hiddenBy.includes(userPin)))  
-          .map((item) => (
-            <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton onClick={() => handleToggleFavorite(item, userPin, setNoteItems, enqueueSnackbar)}>
-                {item.favorites.includes(userPin) ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-              </IconButton>
-              <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                {capitalize(item.content)}
-              </Link>
-              <IconButton onClick={() => handleToggleHide(item, userPin, setNoteItems, enqueueSnackbar)}>
-                {item.hiddenBy && item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />}
-              </IconButton>
-            </li>
-          ))}
+        {noteItems &&
+          noteItems
+            .filter(item => !(item.hiddenBy && item.hiddenBy.includes(userPin)))  
+            .map((item) => (
+              <li key={item.id} style={{ display: 'flex', alignItems: 'center' }}>
+                <IconButton onClick={() => handleToggleFavorite(item, userPin, setNoteItems, enqueueSnackbar)}>
+                  {(Array.isArray(item.favorites) && item.favorites.includes(userPin)) 
+                    ? <StarIcon style={{ color: 'gold' }} /> 
+                    : <StarBorderIcon />}
+                </IconButton>
+                <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
+                  {capitalize(item.content)}
+                </Link>
+                <IconButton onClick={() => handleToggleHide(item, userPin, setNoteItems, enqueueSnackbar)}>
+                  {(Array.isArray(item.hiddenBy) && item.hiddenBy.includes(userPin)) 
+                    ? <Visibility /> 
+                    : <VisibilityOff />}
+                </IconButton>
+              </li>
+            ))}
       </ul>
 
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
@@ -101,32 +105,42 @@ const ItemLists = () => {
           label="Listan nimi"
           variant="outlined"
           value={newListContent}
-          onChange={(e) => setNewListContent(e.target.value)}
+          onChange={(e) => setNewListContent(e.target.value)}  
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {  
+              handleCreateList(newListContent, noteItems, userPin, enqueueSnackbar, setNoteItems, setNewListContent);
+            }
+          }}
         />
         <Button 
-          onClick={() => handleCreateList(newListContent, userPin, enqueueSnackbar, navigate)}
-        >
+          onClick={() => handleCreateList(newListContent, noteItems, userPin, enqueueSnackbar, setNoteItems, setNewListContent)}>
           <AddIcon />
         </Button>
       </Stack>
 
       <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-        <TextField
-          label="Syötä listan koodi"
+      <TextField
+          label="Liity listalle koodilla"
           variant="outlined"
+          color="black"
+          size="small"
           value={code}
           onChange={(e) => setCode(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleJoinListByCode(code, userPin, setNoteItems, enqueueSnackbar, setCode); 
+            }
+          }}
         />
-        <Button 
-          onClick={() => handleJoinListByCode(code, userPin, setNoteItems, enqueueSnackbar)}
-        >
+        <Button onClick={() => handleJoinListByCode(code, userPin, setNoteItems, enqueueSnackbar, setCode)}>
           Liity
         </Button>
+
       </Stack>
       <ul>
         {noteItems &&
           noteItems
-            .filter(item => item.hiddenBy && item.hiddenBy.includes(userPin))  // Show hidden items
+            .filter(item => item.hiddenBy && item.hiddenBy.includes(userPin))  
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
