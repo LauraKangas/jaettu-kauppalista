@@ -61,7 +61,7 @@ const ItemLists = () => {
         const sortedLists = lists.sort((a, b) => b.isFavorite - a.isFavorite);
         setNoteItems(sortedLists);
       } catch (error) {
-        enqueueSnackbar('Virhe listojen hakemisessa: ' + error.message, { variant: 'error' });
+        enqueueSnackbar('Virhe listojen hakemisessa');
       }
     };
   
