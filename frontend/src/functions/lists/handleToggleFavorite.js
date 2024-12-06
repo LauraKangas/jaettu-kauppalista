@@ -2,15 +2,7 @@ import { doc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { db } from '../../utils/firebase/app';
 
 export const handleToggleFavorite = async (list, userPin, setNoteItems, enqueueSnackbar) => {
-    // Check if setNoteItems is a function
-    if (typeof setNoteItems !== 'function') {
-      console.error("setNoteItems is not a function");
-      return;
-    }
-  
-    console.log("User Pin:", userPin);  // Debugging line
-    console.log("Favorites:", list.favorites);  // Debugging line
-  
+
     const favorites = Array.isArray(list.favorites) ? list.favorites : [];
     const isFavorite = favorites.includes(userPin);
   
@@ -22,7 +14,6 @@ export const handleToggleFavorite = async (list, userPin, setNoteItems, enqueueS
       isFavorite: !isFavorite,
     };
   
-    // Update state with prevItems check
     setNoteItems(prevItems => {
       if (!Array.isArray(prevItems)) {
         console.error("prevItems is not an array", prevItems);

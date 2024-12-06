@@ -7,17 +7,15 @@ export const handleToggleHide = async (list, userPin, setNoteItems, enqueueSnack
   const updatedList = {
     ...list,
     hiddenBy: isHidden
-      ? list.hiddenBy.filter(pin => pin !== userPin)  // Unhide the list
-      : [...list.hiddenBy, userPin],  // Hide the list
+      ? list.hiddenBy.filter(pin => pin !== userPin)  
+      : [...list.hiddenBy, userPin],  
   };
 
-  // Ensure setNoteItems is a function
   if (typeof setNoteItems !== 'function') {
     console.error('setNoteItems is not a function');
     return;
   }
 
-  // Update the local state
   setNoteItems(prevItems =>
     prevItems
       .map(item => item.id === list.id ? updatedList : item)
@@ -25,12 +23,10 @@ export const handleToggleHide = async (list, userPin, setNoteItems, enqueueSnack
   );
 
   try {
-    // Update the list in Firestore
     await updateDoc(doc(db, 'lists', list.id), {
       hiddenBy: isHidden ? arrayRemove(userPin) : arrayUnion(userPin),
     });
   } catch (error) {
-    // Revert the state update if the update fails
     setNoteItems(prevItems =>
       prevItems.map(item =>
         item.id === list.id
