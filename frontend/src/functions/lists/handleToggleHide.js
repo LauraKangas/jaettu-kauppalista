@@ -11,11 +11,6 @@ export const handleToggleHide = async (list, userPin, setNoteItems, enqueueSnack
       : [...list.hiddenBy, userPin],  
   };
 
-  if (typeof setNoteItems !== 'function') {
-    console.error('setNoteItems is not a function');
-    return;
-  }
-
   setNoteItems(prevItems =>
     prevItems
       .map(item => item.id === list.id ? updatedList : item)
@@ -34,7 +29,7 @@ export const handleToggleHide = async (list, userPin, setNoteItems, enqueueSnack
           : item
       )
     );
-    enqueueSnackbar('Virhe piilotettaessa listaa: ' + error.message, { variant: 'error' });
+    enqueueSnackbar('Virhe piilotettaessa listaa. Yritä hetken kuluttua uudelleen.', { variant: 'error'});
   }
 };
 

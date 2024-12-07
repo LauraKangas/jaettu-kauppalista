@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from './utils/firebase/app';
-import { Button } from '@mui/material';
+import { Button, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import LoginIcon from '@mui/icons-material/Login';
 import Key from '@mui/icons-material/Key';
@@ -42,12 +42,14 @@ const PinPage = () => {
 
       <div>
         <h3>Kirjaudu sisään</h3>
-        <input
-          type="text"
+        <TextField
+          label="Kirjoita koodisi tähän..."
+          variant="outlined"
+          color="black"
+          size="small"
           value={inputPin}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
-          placeholder="Kirjoita koodisi tähän..."
         />
         <Button onClick={() => accessData(inputPin, db, enqueueSnackbar, navigate)}>
           <LoginIcon />

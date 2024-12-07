@@ -68,8 +68,6 @@ const ItemLists = () => {
     fetchLists();
   }, [userPin, enqueueSnackbar]);
 
-  const capitalize = item => `${item.slice(0, 1).toUpperCase()}${item.slice(1).toLowerCase()}`;
-
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -89,7 +87,7 @@ const ItemLists = () => {
                     : <StarBorderIcon />}
                 </IconButton>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                  {capitalize(item.content)}
+                  {item.content}
                 </Link>
                 <IconButton onClick={() => handleToggleHide(item, userPin, setNoteItems, enqueueSnackbar)}>
                   {(Array.isArray(item.hiddenBy) && item.hiddenBy.includes(userPin)) 
@@ -104,6 +102,8 @@ const ItemLists = () => {
         <TextField
           label="Listan nimi"
           variant="outlined"
+          color="black"
+          size="small"
           value={newListContent}
           onChange={(e) => setNewListContent(e.target.value)}  
           onKeyPress={(e) => {
@@ -144,7 +144,7 @@ const ItemLists = () => {
             .map((item) => (
               <li key={item.id} style={{ display: 'flex', alignItems: 'center', opacity: 0.5 }}>
                 <Link to={`/list/${item.id}`} state={{ list: item }} style={{ flexGrow: 1 }}>
-                  {capitalize(item.content)} (Piilotettu)
+                  {item.content} (Piilotettu)
                 </Link>
                 <IconButton onClick={() => handleToggleHide(item, userPin, setNoteItems, enqueueSnackbar)}>
                   {item.hiddenBy && item.hiddenBy.includes(userPin) ? <Visibility /> : <VisibilityOff />}

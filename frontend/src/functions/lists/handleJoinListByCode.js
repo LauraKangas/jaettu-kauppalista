@@ -44,7 +44,7 @@ export const handleJoinListByCode = async (code, userPin, setNoteItems, enqueueS
         enqueueSnackbar('Listaa ei löytynyt koodilla.', { variant: 'error' });
       }
     } catch (error) {
-      enqueueSnackbar('Virhe listan hakemisessa: ' + error.message, { variant: 'error' });
+      enqueueSnackbar('Virhe listan hakemisessa. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
     }
   };
   

@@ -16,7 +16,6 @@ export const handleToggleFavorite = async (list, userPin, setNoteItems, enqueueS
   
     setNoteItems(prevItems => {
       if (!Array.isArray(prevItems)) {
-        console.error("prevItems is not an array", prevItems);
         return [];
       }
   
@@ -30,7 +29,6 @@ export const handleToggleFavorite = async (list, userPin, setNoteItems, enqueueS
         favorites: isFavorite ? arrayRemove(userPin) : arrayUnion(userPin),
         isFavorite: !isFavorite,
       });
-      console.log("Updated Firestore document");  
     } catch (error) {
       setNoteItems(prevItems =>
         prevItems.map(item =>
@@ -39,7 +37,7 @@ export const handleToggleFavorite = async (list, userPin, setNoteItems, enqueueS
             : item
         )
       );
-      enqueueSnackbar('Virhe päivittäessä suosikkiasetusta: ' + error.message, { variant: 'error' });
+      enqueueSnackbar('Virhe päivittäessä suosikkiasetusta. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
     }
   };
   
