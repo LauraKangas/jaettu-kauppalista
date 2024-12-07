@@ -4,6 +4,16 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firest
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { validateItemContent, checkForDuplicateItem } from './validations';
+import { handleDeleteListConfirmed } from './functions/items/handleDeleteListConfirmed';
+import { handleEditListName, handleSaveEditedListName, handleCancelEditListName  } from './functions/items/handleEditListName';
+import { handleAddItem } from './functions/items/handleAddItem';
+import { handleDeleteItem } from './functions/items/handleDeleteItem';
+import { handleEditItem, handleCancelEdit, handleSaveEditedItem } from './functions/items/handleEditItem';
+import { handleCheckboxChange } from './functions/items/handleCheckboxChange';
+import { handleToggleFavorite } from './functions/items/handleToggleFavorite';
+import { handleCopyCode } from './functions/items/handleCopyCode';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -12,8 +22,6 @@ import Checkbox from '@mui/material/Checkbox';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ContentCopy from '@mui/icons-material/ContentCopy';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { validateItemContent, checkForDuplicateItem } from './validations';
 
 const ListView = () => {
   const { id } = useParams();
@@ -29,8 +37,8 @@ const ListView = () => {
   const [editedItemContent, setEditedItemContent] = useState('');
   const [sharedCount, setSharedCount] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditingListName, setIsEditingListName] = useState(false); 
-  const [editedListName, setEditedListName] = useState(''); 
+  const [editedListName, setEditedListName] = useState(null); 
+  const [isEditingListName, setIsEditingListName] = useState(false);
 
   const handleDialogOpen = () => setIsDialogOpen(true);
   const handleDialogClose = () => setIsDialogOpen(false);
@@ -58,235 +66,150 @@ const ListView = () => {
     fetchList();
   }, [id]);
 
-  const handleDeleteListConfirmed = async () => {
-    try {
-      const listDocRef = doc(db, 'lists', id);
-      const listDoc = await getDoc(listDocRef);
+  const confirmDeleteList = () => {
+    handleDeleteListConfirmed(
+      id,
+      userPin,
+      enqueueSnackbar,
+      navigate,
+      handleDialogClose,
+      setListUpdates
+    );
+  };
+
+  const editListName = () => {
+    handleEditListName(
+      listUpdates.content, 
+      setEditedListName, 
+      setIsEditingListName
+    );
+  };
   
-      if (listDoc.exists()) {
-        const listData = listDoc.data();
+  const cancelEditListName = () => {
+    handleCancelEditListName(
+      listUpdates.content, 
+      setEditedListName, 
+      setIsEditingListName
+    );
+  };
   
-        if (listData.visibleTo.includes(userPin)) {
-          await updateDoc(listDocRef, {
-            visibleTo: arrayRemove(userPin),
-          });
-        }
-        setListUpdates(null);
+  const saveEditedListName = async () => {
+    await handleSaveEditedListName(
+      id,
+      editedListName,
+      enqueueSnackbar,
+      setListUpdates,
+      setIsEditingListName
+    );
+  };
   
-        enqueueSnackbar('Lista poistettu onnistuneesti.', { variant: 'success' });
-        navigate('/lists');
-      } else {
-        enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
-      }
-    } catch (error) {
-      enqueueSnackbar('Virhe poistettaessa listaa: ' + error.message, { variant: 'error' });
-    } finally {
-      handleDialogClose(); 
-    }
+  const addItem = () => {
+    handleAddItem(
+      id,
+      newItem,
+      listUpdates,
+      enqueueSnackbar,
+      validateItemContent,
+      checkForDuplicateItem,
+      fetchList,
+      setNewItem
+    );
   };
 
-  const handleEditListName = async () => {
-    if (editedListName.trim()) {
-      try {
-        await updateDoc(doc(db, 'lists', id), {
-          content: editedListName,
-        });
-
-        enqueueSnackbar('Listan nimi päivitetty.', { variant: 'success' });
-        setListUpdates(prev => ({ ...prev, content: editedListName }));
-        setIsEditingListName(false);
-      } catch (error) {
-        enqueueSnackbar('Virhe listan nimen päivittämisessä: ' + error.message, { variant: 'error' });
-      }
-    } else {
-      enqueueSnackbar('Listan nimi ei voi olla tyhjä.', { variant: 'error' });
-    }
-  };
-
-  const handleCancelEditListName = () => {
-    setEditedListName(listUpdates.content);
-    setIsEditingListName(false);
-  };
-
-  const handleAddItem = async () => {
-    if (!newItem) {
-      enqueueSnackbar('Tuote ei voi olla tyhjä.', { variant: 'error' });
-      return;
-    }
-
-    const validation = validateItemContent(newItem);
-    if (!validation.isValid) {
-      enqueueSnackbar(validation.message, { variant: 'error' });
-      return;
-    }
-
-    if (!checkForDuplicateItem(listUpdates.items.map(i => i.content), newItem)) {
-      enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
-      return;
-    }
-
-    const newItemObject = { content: newItem, isChecked: false, isFavorite: false };
-
+  const deleteItem = async (itemToDelete) => {
     try {
-      await updateDoc(doc(db, 'lists', id), {
-        items: arrayUnion(newItemObject),
-      });
-
-      fetchList();
-      setNewItem('');
+      await handleDeleteItem(id, itemToDelete, fetchList, enqueueSnackbar);
     } catch (error) {
-      enqueueSnackbar('Virhe lisättäessä tuotetta: ' + error.message, { variant: 'error' });
+      console.error('Error deleting item:', error.message);
     }
   };
 
-  const handleDeleteItem = async (itemToDelete) => {
-    try {
-      await updateDoc(doc(db, 'lists', id), {
-        items: arrayRemove(itemToDelete),
-      });
-
-      fetchList();
-    } catch (error) {
-      enqueueSnackbar('Virhe poistettaessa tuotetta: ' + error.message, { variant: 'error' });
-    }
+  const editItem = (itemToEdit) => {
+    handleEditItem(
+      itemToEdit, 
+      setEditingItem, 
+      setEditedItemContent
+    );
+  };
+  
+  const cancelEdit = () => {
+    handleCancelEdit(
+      setEditingItem, 
+      setEditedItemContent
+    );
+  };
+  
+  const saveEditedItem = async () => {
+    await handleSaveEditedItem(
+      id,
+      editingItem,
+      editedItemContent,
+      listUpdates,
+      fetchList,
+      setEditingItem,
+      setEditedItemContent,
+      enqueueSnackbar
+    );
   };
 
-  const handleEditItem = (itemToEdit) => {
-    setEditingItem(itemToEdit);
-    setEditedItemContent(itemToEdit.content);
+  const checkboxChange = async (itemToToggle) => {
+    await handleCheckboxChange(itemToToggle, listUpdates, id, db, fetchList, enqueueSnackbar);
   };
-
-  const handleCancelEdit = () => {
-    setEditingItem(null);
-    setEditedItemContent('');
+  
+  const toggleFavorite= async (itemToToggle) => {
+    await handleToggleFavorite(itemToToggle, listUpdates, id, db, fetchList, enqueueSnackbar);
   };
-
-  const handleSaveEditedItem = async () => {
-    if (!editedItemContent) {
-      enqueueSnackbar('Tuotteen sisältö ei voi olla tyhjä.', { variant: 'error' });
-      return;
-    }
-
-    const validation = validateItemContent(editedItemContent);
-    if (!validation.isValid) {
-      enqueueSnackbar(validation.message, { variant: 'error' });
-      return;
-    }
-
-    const updatedList = {
-      ...listUpdates,
-      items: listUpdates.items.map(item => ({
-        ...item,
-        content: item.content === editingItem.content
-          ? editedItemContent
-          : item.content,
-      })),
-    };
-
-    try {
-      await updateDoc(doc(db, 'lists', id), {
-        items: updatedList.items,
-      });
-
-      fetchList();
-      setEditingItem(null);
-      setEditedItemContent('');
-    } catch (error) {
-      enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
-    }
-  };
-
-  const handleCheckboxChange = async (itemToToggle) => {
-    const updatedList = {
-      ...listUpdates,
-      items: listUpdates.items.map(item => ({
-        ...item,
-        isChecked: item.content === itemToToggle.content ? !item.isChecked : item.isChecked,
-      })),
-    };
-
-    try {
-      await updateDoc(doc(db, 'lists', id), {
-        items: updatedList.items,
-      });
-
-      fetchList();
-    } catch (error) {
-      enqueueSnackbar('Virhe päivittäessä valintaa: ' + error.message, { variant: 'error' });
-    }
-  };
-
-  const handleToggleFavorite = async (itemToToggle) => {
-    const updatedList = {
-      ...listUpdates,
-      items: listUpdates.items.map(item =>
-        item.content === itemToToggle.content
-          ? { ...item, isFavorite: !item.isFavorite }
-          : item
-      ),
-    };
-
-    try {
-      await updateDoc(doc(db, 'lists', id), {
-        items: updatedList.items,
-      });
-
-      fetchList();
-    } catch (error) {
-      enqueueSnackbar('Virhe päivittäessä suosikkia: ' + error.message, { variant: 'error' });
-    }
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(listUpdates.code)
-      .then(() => {
-        enqueueSnackbar('Koodi kopioitu leikepöydälle!', { variant: 'success' });
-      })
-      .catch((error) => {
-        enqueueSnackbar('Virhe koodin kopioinnissa: ' + error.message, { variant: 'error' });
-      });
+  
+  const copyCode = () => {
+    handleCopyCode(listUpdates.code, enqueueSnackbar);
   };
 
   if (!listUpdates) {
-    return <div>Loading...</div>;
+    return <div>Ladataan...</div>;
   }
 
   return (
     <div>
       <Button onClick={() => navigate('/lists')}>
         <ArrowBack />
-      </Button>
-      {isEditingListName ? (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            variant="outlined"
-            color='black'
-            size="small"
-            value={editedListName}
-            onChange={(e) => setEditedListName(e.target.value)}
-            onBlur={handleEditListName}
-            onKeyPress={(e) => e.key === 'Enter' && handleEditListName()}
-          />
-          <Button onClick={handleCancelEditListName}>Cancel</Button>
-        </Stack>
-      ) : (
-        <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {listUpdates.content}
-          </Typography>
-          <Button onClick={() => setIsEditingListName(true)}>
-            <EditIcon />
           </Button>
-        </Stack>
-      )}
-  
+          {isEditingListName ? (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TextField
+              variant="outlined"
+              color="black"
+              size="small"
+              value={editedListName}
+              onChange={(e) => setEditedListName(e.target.value)}
+              onBlur={() => {
+                if (!editedListName.trim()) {
+                  cancelEditListName();
+                }
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && saveEditedListName()}
+            />
+            <Button onClick={saveEditedListName}>Tallenna</Button>
+            <Button onClick={cancelEditListName}>Peruuta</Button>  
+          </Stack>
+        ) : (
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              {listUpdates.content}  
+            </Typography>
+            <Button onClick={editListName}>  
+              <EditIcon />
+            </Button>
+          </Stack>
+        )}
+
+
       <Stack direction="row" spacing={1} alignItems="center" mb={2} justifyContent="center">
         <p>Liittymisavain: <strong>{listUpdates.code}</strong></p>
-        <Button onClick={handleCopyCode}>
+        <Button onClick={copyCode}>
           <ContentCopy style={{ fontSize: 15 }} />
         </Button>
       </Stack>
-  
+
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
         <Typography variant='subtitle1' color="textSecondary">
           Jaettu {sharedCount - 1} henkilölle
@@ -298,23 +221,23 @@ const ListView = () => {
           .sort((a, b) => b.isFavorite - a.isFavorite)
           .map(item => (
             <li key={item.content} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-              <Checkbox 
+              <Checkbox
                 color='grey'
                 checked={item.isChecked || false}
-                onChange={() => handleCheckboxChange(item)}
+                onChange={() => checkboxChange(item)}
               />
-              <Button onClick={() => handleToggleFavorite(item)}>
+              <Button onClick={() => toggleFavorite(item)}>
                 {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
               </Button>
               {editingItem && editingItem.content === item.content ? (
                 <TextField
                   variant="outlined"
-                  color='black'
+                  color="black"
                   size="small"
                   value={editedItemContent}
                   onChange={(e) => setEditedItemContent(e.target.value)}
-                  onBlur={handleSaveEditedItem}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSaveEditedItem()}
+                  onBlur={saveEditedItem}
+                  onKeyPress={(e) => e.key === 'Enter' && saveEditedItem()}
                 />
               ) : (
                 <span
@@ -329,17 +252,16 @@ const ListView = () => {
               )}
 
               {!editingItem || editingItem.content !== item.content ? (
-                <Button onClick={() => handleEditItem(item)}>
+                <Button onClick={() => editItem(item)}>
                   <EditIcon />
                 </Button>
               ) : (
                 <>
-                  <Button onClick={handleSaveEditedItem}>Save</Button>
-                  <Button onClick={handleCancelEdit}>Cancel</Button>
+                  <Button onClick={saveEditedItem}>Tallenna</Button>
+                  <Button onClick={cancelEdit}>Peruuta</Button>
                 </>
               )}
-
-              <Button onClick={() => handleDeleteItem(item)}>
+              <Button onClick={() => deleteItem(item)}>
                 <DeleteIcon />
               </Button>
             </li>
@@ -356,13 +278,13 @@ const ListView = () => {
           onChange={(e) => setNewItem(e.target.value)}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
-              handleAddItem();
+              addItem();
             }
           }}
         />
-        <Button onClick={handleAddItem}>
+        <Button onClick={addItem}>
           <AddIcon />
-        </Button> 
+        </Button>
       </Stack>
 
       <Button onClick={handleDialogOpen}>
@@ -377,12 +299,8 @@ const ListView = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose}>
-            Peruuta
-          </Button>
-          <Button onClick={handleDeleteListConfirmed}>
-            Poista
-          </Button>
+          <Button onClick={handleDialogClose}>Peruuta</Button>
+          <Button onClick={confirmDeleteList}>Poista</Button>
         </DialogActions>
       </Dialog>
     </div>

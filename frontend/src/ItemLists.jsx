@@ -61,7 +61,7 @@ const ItemLists = () => {
         const sortedLists = lists.sort((a, b) => b.isFavorite - a.isFavorite);
         setNoteItems(sortedLists);
       } catch (error) {
-        enqueueSnackbar('Virhe listojen hakemisessa');
+        enqueueSnackbar('Virhe listojen hakemisessa. Yritä hetken kuluttua uudelleen.', { variant:'error' });
       }
     };
   
@@ -133,7 +133,7 @@ const ItemLists = () => {
           }}
         />
         <Button onClick={() => handleJoinListByCode(code, userPin, setNoteItems, enqueueSnackbar, setCode)}>
-          Liity
+          Lisää
         </Button>
 
       </Stack>
