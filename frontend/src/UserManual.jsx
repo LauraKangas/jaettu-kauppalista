@@ -2,17 +2,35 @@ import React from 'react';
 import { Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBack from '@mui/icons-material/ArrowBack'
-
+/**
+ * The `UserManual` component provides a comprehensive guide for using the application.
+ * It includes instructions for logging in, managing lists, sharing lists, and resolving common issues.
+ * 
+ * ### Features:
+ * - Navigation back to the home page using a "Back" button.
+ * - Structured user manual with sections for each core feature of the app.
+ * 
+ * @component
+ * @returns {JSX.Element} A user manual with clear instructions and tips for using the application.
+ */
 const UserManual = () => {
   const navigate = useNavigate();
+
+  /**
+   * Handles the navigation to the previous page when the "Back" button is clicked.
+   * 
+   */
+  const handleNavigateBack = () => {
+    navigate('/');
+  };
 
   return (
     <div style={{ padding: '20px' }}>
       <Button
-        onClick={() => navigate('/')}
+        onClick={handleNavigateBack}
         style={{ marginTop: '20px' }}
       >
-        <ArrowBack />Takaisin
+        <ArrowBack /> 
       </Button>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1>Käyttäjäopas</h1>

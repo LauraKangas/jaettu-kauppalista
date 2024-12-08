@@ -7,37 +7,65 @@ import LogOut from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './index.css';
-
+/**
+ * The `AppsBar` component renders a responsive application bar with navigation and theme toggle options.
+ * 
+ * ### Features:
+ * - **Navigation Menu**: 
+ *   - Contains options to navigate to the user manual and log out.
+ * - **Theme Toggle**: 
+ *   - Allows users to switch between light and dark modes.
+ * - **Current Page Awareness**: 
+ *   - Hides or adjusts options based on the user's current location in the app.
+ * 
+ * @component
+ * @param {Object} props - Props passed to the component.
+ * @param {boolean} props.darkMode - Indicates if dark mode is currently active.
+ * @param {function} props.setDarkMode - Function to toggle dark mode state.
+ *
+ * @returns {JSX.Element} The application bar UI component.
+ */
 const AppsBar = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  // State for menu anchor element
   const [anchorEl, setAnchorEl] = useState(null);
   const isMenuOpen = Boolean(anchorEl);
-
+  /**
+   * Opens the dropdown menu.
+   * @param {Object} event - The click event that triggered the menu.
+   */
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-
+  /**
+   * Closes the dropdown menu.
+   */
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-
+  /**
+   * Toggles the dark mode state between `true` and `false`.
+   */
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
   };
-
+  /**
+   * Navigates to the user manual page and closes the menu.
+   */
   const navigateToUserManual = () => {
     navigate('/user-manual');
     handleMenuClose();
   };
-
+  /**
+   * Logs out the user by removing their PIN from local storage and redirects to the login page.
+   */
   const handleLogout = () => {
     localStorage.removeItem('userPin');
     navigate('/');
     handleMenuClose();
   };
-
+  // Determines if the current page is the PIN page, if so, does not show logout option
   const isPinPage = location.pathname === '/';
 
   return (

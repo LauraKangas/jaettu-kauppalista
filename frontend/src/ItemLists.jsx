@@ -13,59 +13,83 @@ import { handleCreateList } from './functions/lists/handleCreateList';
 import { handleToggleFavorite } from './functions/lists/handleToggleFavorite';
 import { handleToggleHide } from './functions/lists/handleToggleHide';
 import { handleJoinListByCode } from './functions/lists/handleJoinListByCode';
-
+/**
+ * The `ItemLists` component represents the user's list management interface. 
+ * It fetches, sorts, and displays lists visible to the logged-in user, allowing interactions like viewing favorites.
+ *
+ * ### Features:
+ * - Fetches lists from Firestore and filters them based on user visibility.
+ * - Highlights favorite lists and sorts them to appear first.
+ * - Integrates with Firebase for data retrieval and local storage for user session management.
+ * - Provides feedback for errors using snackbars.
+ * 
+ * @component
+ * @returns {JSX.Element} A view for managing and interacting with lists.
+ */
 const ItemLists = () => {
-  const [newListContent, setNewListContent] = useState('');
-  const [code, setCode] = useState('');
-  const { enqueueSnackbar } = useSnackbar();
-  const navigate = useNavigate();
-  const [userPin, setUserPin] = useState(null);
-  const [noteItems, setNoteItems] = useState([]);
-
+  // State variables for managing component data and interactions.
+  const [newListContent, setNewListContent] = useState(''); // Content for creating a new list.
+  const [code, setCode] = useState(''); // Code for sharing or accessing lists.
+  const { enqueueSnackbar } = useSnackbar(); // Snackbar for displaying notifications.
+  const navigate = useNavigate(); // Navigation handler for routing.
+  const [userPin, setUserPin] = useState(null); // User's PIN from local storage.
+  const [noteItems, setNoteItems] = useState([]); // List of notes visible to the user.
+  /**
+   * Fetches the user's PIN from local storage on mount.
+   * Redirects to the login page if no PIN is found.
+   */
   useEffect(() => {
     const storedUserPin = localStorage.getItem('userPin');
     if (storedUserPin) {
       setUserPin(storedUserPin);
     } else {
-      navigate('/');  
+      navigate('/'); // Redirect to home if the user is not logged in.
     }
   }, [navigate]);
-
+  /**
+   * Fetches lists from Firestore and filters them based on visibility to the current user.
+   * Sorts the lists, prioritizing favorites.
+   */
   useEffect(() => {
     const fetchLists = async () => {
-      if (!userPin) return;
-  
+      if (!userPin) return; // Exit if no user PIN is available.
+
       try {
+        // Retrieve all lists from Firestore.
         const listsCollection = await getDocs(collection(db, 'lists'));
         const lists = listsCollection.docs
           .map(doc => {
-            const data = doc.data();
+            const data = doc.data(); // Extract data from each document.
 
+            // Ensure visibility, hidden status, and favorite lists are arrays.
             const visibleTo = Array.isArray(data.visibleTo) ? data.visibleTo : [];
             const hiddenBy = Array.isArray(data.hiddenBy) ? data.hiddenBy : [];
             const favorites = Array.isArray(data.favorites) ? data.favorites : [];
-  
+
+            // Include lists visible to the current user.
             if (visibleTo.includes(userPin)) {
               return {
-                ...data,
-                id: doc.id,
+                ...data, // Merge Firestore data with additional properties.
+                id: doc.id, // Include the document ID.
                 favorites,
                 hiddenBy,
-                isFavorite: favorites.includes(userPin),
+                isFavorite: favorites.includes(userPin), // Mark as favorite if applicable.
               };
             }
-            return null;
+            return null; // Exclude lists not visible to the user.
           })
-          .filter(doc => doc !== null);  
-  
+          .filter(doc => doc !== null); // Remove null entries.
+
+        // Sort lists to prioritize favorites.
         const sortedLists = lists.sort((a, b) => b.isFavorite - a.isFavorite);
-        setNoteItems(sortedLists);
+        setNoteItems(sortedLists); // Update state with sorted lists.
       } catch (error) {
-        enqueueSnackbar('Virhe listojen hakemisessa. Yritä hetken kuluttua uudelleen.', { variant:'error' });
+        // Display an error notification if the fetch operation fails.
+        enqueueSnackbar('Virhe listojen hakemisessa. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
       }
     };
-  
-    fetchLists();
+
+    fetchLists(); // Trigger the fetch operation.
   }, [userPin, enqueueSnackbar]);
 
   return (

@@ -5,9 +5,9 @@ import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { validateItemContent, checkForDuplicateItem } from './validations';
-import { handleDeleteListConfirmed } from './functions/items/handleDeleteListConfirmed';
-import { handleEditListName, handleSaveEditedListName, handleCancelEditListName  } from './functions/items/handleEditListName';
+import { validateItemContent, checkForDuplicateItem } from './functions/validate/validations';
+import { handleDeleteListConfirmed } from './functions/lists/handleDeleteListConfirmed';
+import { handleEditListName, handleSaveEditedListName, handleCancelEditListName  } from './functions/lists/handleEditListName';
 import { handleAddItem } from './functions/items/handleAddItem';
 import { handleDeleteItem } from './functions/items/handleDeleteItem';
 import { handleEditItem, handleCancelEdit, handleSaveEditedItem } from './functions/items/handleEditItem';
@@ -22,27 +22,51 @@ import Checkbox from '@mui/material/Checkbox';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ContentCopy from '@mui/icons-material/ContentCopy';
-
+/**
+ * The `ListView` component represents a detailed view of a specific list. 
+ * Users can view, edit, delete, and manage items in the list as well as modify list-level settings.
+ *
+ * ### Features:
+ * - Fetches the list data from Firestore using the list ID.
+ * - Allows item management: adding, editing, deleting, marking as favorite, and toggling completion status.
+ * - Enables list-level operations such as renaming, copying the share code, and sharing status.
+ * - Integrates with Firestore and utilizes multiple helper functions for CRUD operations.
+ * 
+ * @component
+ * @returns {JSX.Element} A detailed view of the selected list with full item management capabilities.
+ */
 const ListView = () => {
-  const { id } = useParams();
-  const { state } = useLocation();
-  const { enqueueSnackbar } = useSnackbar();
-  const navigate = useNavigate();
+  // Get parameters and state from the URL and navigation.
+  const { id } = useParams(); // The unique ID of the list from the URL.
+  const { state } = useLocation(); // Optional state passed during navigation.
+  const { enqueueSnackbar } = useSnackbar(); // Snackbar for notifications.
+  const navigate = useNavigate(); // Navigate programmatically.
 
-  const userPin = localStorage.getItem('userPin');
+  const userPin = localStorage.getItem('userPin'); // User's PIN from local storage.
 
-  const [listUpdates, setListUpdates] = useState(null);
-  const [newItem, setNewItem] = useState('');
-  const [editingItem, setEditingItem] = useState(null);
-  const [editedItemContent, setEditedItemContent] = useState('');
-  const [sharedCount, setSharedCount] = useState(0);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editedListName, setEditedListName] = useState(null); 
-  const [isEditingListName, setIsEditingListName] = useState(false);
-
+  // State management hooks for various list features.
+  const [listUpdates, setListUpdates] = useState(null); // List data from Firestore.
+  const [newItem, setNewItem] = useState(''); // New item content.
+  const [editingItem, setEditingItem] = useState(null); // The item being edited.
+  const [editedItemContent, setEditedItemContent] = useState(''); // Content for the item being edited.
+  const [sharedCount, setSharedCount] = useState(0); // Number of users sharing this list.
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Confirmation dialog state for deletion.
+  const [editedListName, setEditedListName] = useState(null); // The edited list name.
+  const [isEditingListName, setIsEditingListName] = useState(false); // Whether the list name is being edited.
+  /**
+   * Opens the delete confirmation dialog.
+   */
   const handleDialogOpen = () => setIsDialogOpen(true);
+  /**
+   * Closes the delete confirmation dialog.
+   */
   const handleDialogClose = () => setIsDialogOpen(false);
-
+  /**
+   * Fetches the list data from Firestore using the list ID.
+   * Sets the list data and shared count based on the fetched document.
+   * 
+   * @async
+   */
   const fetchList = async () => {
     try {
       const listDocRef = doc(db, 'lists', id);
@@ -52,7 +76,7 @@ const ListView = () => {
         setListUpdates(listData);
         setEditedListName(listData.content); 
         if (Array.isArray(listData.visibleTo)) {
-          setSharedCount(listData.visibleTo.length);
+          setSharedCount(listData.visibleTo.length); 
         }
       } else {
         enqueueSnackbar('Listaa ei löytynyt.', { variant: 'error' });
@@ -61,11 +85,15 @@ const ListView = () => {
       enqueueSnackbar('Virhe ladattaessa listaa: ' + error.message, { variant: 'error' });
     }
   };
-
+  /**
+   * Trigger fetching the list data when the component mounts or `id` changes.
+   */
   useEffect(() => {
     fetchList();
   }, [id]);
-
+  /**
+   * Confirms and executes the list deletion.
+   */
   const confirmDeleteList = () => {
     handleDeleteListConfirmed(
       id,
@@ -76,7 +104,9 @@ const ListView = () => {
       setListUpdates
     );
   };
-
+  /**
+   * Initiates the list name editing process.
+   */
   const editListName = () => {
     handleEditListName(
       listUpdates.content, 
@@ -84,7 +114,9 @@ const ListView = () => {
       setIsEditingListName
     );
   };
-  
+  /**
+   * Cancels the list name editing process.
+   */
   const cancelEditListName = () => {
     handleCancelEditListName(
       listUpdates.content, 
@@ -92,7 +124,11 @@ const ListView = () => {
       setIsEditingListName
     );
   };
-  
+  /**
+   * Saves the edited list name to Firestore.
+   * 
+   * @async
+   */
   const saveEditedListName = async () => {
     await handleSaveEditedListName(
       id,
@@ -102,7 +138,9 @@ const ListView = () => {
       setIsEditingListName
     );
   };
-  
+  /**
+   * Adds a new item to the list.
+   */
   const addItem = () => {
     handleAddItem(
       id,
@@ -115,15 +153,20 @@ const ListView = () => {
       setNewItem
     );
   };
-
+  /**
+   * Deletes an item from the list.
+   * 
+   * @async
+   * @param {Object} itemToDelete - The item to be deleted.
+   */
   const deleteItem = async (itemToDelete) => {
-    try {
-      await handleDeleteItem(id, itemToDelete, fetchList, enqueueSnackbar);
-    } catch (error) {
-      console.error('Error deleting item:', error.message);
-    }
+    await handleDeleteItem(id, itemToDelete, fetchList, enqueueSnackbar);
   };
-
+  /**
+   * Starts editing an item.
+   * 
+   * @param {Object} itemToEdit - The item to edit.
+   */
   const editItem = (itemToEdit) => {
     handleEditItem(
       itemToEdit, 
@@ -131,14 +174,20 @@ const ListView = () => {
       setEditedItemContent
     );
   };
-  
+  /**
+   * Cancels the editing of an item.
+   */
   const cancelEdit = () => {
     handleCancelEdit(
       setEditingItem, 
       setEditedItemContent
     );
   };
-  
+  /**
+   * Saves the edited item content.
+   * 
+   * @async
+   */
   const saveEditedItem = async () => {
     await handleSaveEditedItem(
       id,
@@ -151,19 +200,31 @@ const ListView = () => {
       enqueueSnackbar
     );
   };
-
+  /**
+   * Toggles the completion status of an item.
+   * 
+   * @async
+   * @param {Object} itemToToggle - The item to toggle.
+   */
   const checkboxChange = async (itemToToggle) => {
     await handleCheckboxChange(itemToToggle, listUpdates, id, db, fetchList, enqueueSnackbar);
   };
-  
-  const toggleFavorite= async (itemToToggle) => {
+  /**
+   * Toggles the favorite status of an item.
+   * 
+   * @async
+   * @param {Object} itemToToggle - The item to toggle.
+   */
+  const toggleFavorite = async (itemToToggle) => {
     await handleToggleFavorite(itemToToggle, listUpdates, id, db, fetchList, enqueueSnackbar);
   };
-  
+  /**
+   * Copies the list's share code to the clipboard.
+   */
   const copyCode = () => {
     handleCopyCode(listUpdates.code, enqueueSnackbar);
   };
-
+  // Display a loading state if the list data has not been fetched yet.
   if (!listUpdates) {
     return <div>Ladataan...</div>;
   }
