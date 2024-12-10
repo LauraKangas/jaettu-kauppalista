@@ -53,7 +53,6 @@ export const handleAddItem = async (
     fetchList(); // Refresh the list
     setNewItem(''); // Clear the input field
   } catch (error) {
-    console.log(error);
     enqueueSnackbar('Virhe lisättäessä tuotetta. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
   }
 };
