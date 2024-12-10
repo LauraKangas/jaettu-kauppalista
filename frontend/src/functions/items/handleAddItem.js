@@ -20,39 +20,36 @@ export const handleAddItem = async (
   fetchList,
   setNewItem
 ) => {
-  // Check if the new item content is empty
+  // Validate input
   if (!newItem) {
     enqueueSnackbar('Tuote ei voi olla tyhjä.', { variant: 'error' });
     return;
   }
 
-  // Validate the new item content
   const validation = validateItemContent(newItem);
   if (!validation.isValid) {
     enqueueSnackbar(validation.message, { variant: 'error' });
     return;
   }
 
-  // Check if the new item is a duplicate in the list
+  // Check for duplicates
   if (!checkForDuplicateItem(listUpdates.items.map(i => i.content), newItem)) {
     enqueueSnackbar('Tämä tuote on jo listalla.', { variant: 'error' });
     return;
   }
 
-  // Create an object for the new item with default properties
+  // Create a new item object
   const newItemObject = { content: newItem, isChecked: false, isFavorite: false };
 
-  try {
-    // Update the list document in Firestore with the new item
-    await updateDoc(doc(db, 'lists', id), {
-      items: arrayUnion(newItemObject),
-    });
+  // Add the new item to the list
+  const updatedItems = [...listUpdates.items, newItemObject];
 
-    // Fetch and refresh the list after updating
-    fetchList();
-    
-    // Clear the new item input field
-    setNewItem('');
+  try {
+    // Update Firestore with the new items array
+    await updateDoc(doc(db, 'lists', id), { items: updatedItems });
+
+    fetchList(); // Refresh the list
+    setNewItem(''); // Clear the input field
   } catch (error) {
     enqueueSnackbar('Virhe lisättäessä tuotetta. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
   }
