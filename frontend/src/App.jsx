@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, Typography } from '@mui/material';
 import './index.css';
 import AppsBar from './AppsBar';
 import PinPage from './PinPage';
 import ListView from './ListView';
 import UserManual from './UserManual';
 import ItemLists from './ItemLists';
+
 /**
  * The `App` component manages the application's theme state (light or dark mode)
  * and synchronizes the user's theme preference with local storage.
@@ -71,6 +72,13 @@ const App = () => {
             <Route path="/user-manual" element={<UserManual />} />
           </Routes>
         </div>
+        <footer>
+          <div className="footer">
+          <Typography variant="body2" align="center">
+            &copy; {new Date().getFullYear()} Listfun
+          </Typography>
+          </div>
+        </footer>
       </Router>
     </ThemeProvider>
   );

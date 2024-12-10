@@ -216,3 +216,9 @@ body:not(.dark-mode) .MuiButton-root {
   background-color: #333; 
   color: white;
 }
+
+.footer {
+  background-color: #f1f1f12d;
+  text-align: center;
+  padding: 10px;
+}
