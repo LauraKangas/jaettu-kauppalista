@@ -218,8 +218,8 @@ body:not(.dark-mode) .MuiButton-root {
 }
 
 .footer {
-  margin-top: auto;
-  background-color: #f1f1f12d;
-  text-align: center;
-  padding: 10px;
+  position: static;
+  left: 0;
+  bottom: 3;
+  width: 100%;
 }
