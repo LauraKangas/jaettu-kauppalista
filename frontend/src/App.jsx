@@ -64,7 +64,7 @@ const App = () => {
       <CssBaseline />
       <Router>
         <AppsBar darkMode={darkMode} setDarkMode={setDarkMode} />
-        <div className="container">
+        <div className="container" >
           <Routes>
             <Route path="/" element={<PinPage />} />
             <Route path="/lists" element={<ItemLists />} />
@@ -72,7 +72,7 @@ const App = () => {
             <Route path="/user-manual" element={<UserManual />} />
           </Routes>
         </div>
-        <footer>
+        <footer >
           <div className="footer">
           <Typography variant="body2" align="center">
             &copy; {new Date().getFullYear()} Listfun
