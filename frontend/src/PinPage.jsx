@@ -57,10 +57,19 @@ const PinPage = () => {
     <div>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h2>Tervetuloa!</h2>
-      </div>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-      </p>
+    </div>
+        <p>
+            "ListFun tekee arjen listauksista hauskoja ja helppoja!"<br></br>
+            Täällä voit luoda, muokata ja jakaa muistilistoja ystävien, perheen tai kämppisten kanssa.<br></br>
+            Ei enää kadonneita muistilappuja – kaikki on näppärästi yhdessä paikassa!<br></br>
+            <br></br>
+            Näin pääset alkuun:<br></br>
+            <br></br>
+            Luo oma käyttäjäkoodisi ja kirjaudu sisään.<br></br>
+            Lisää listasi ja kutsu ystävät mukaan.<br></br>
+            Anna ListFunin pitää asiat järjestyksessä puolestasi.<br></br>
+            &#128274; Huom: Käyttäjäkoodisi on henkilökohtainen. Pidä se tallessa ja omana tietonasi. Emme voi palauttaa sitä, jos unohdat sen.
+        </p>
 
       <div>
         <h3>Kirjaudu sisään</h3>
