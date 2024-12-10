@@ -1,5 +1,4 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 /**
  * Firebase configuration and initialization file.
@@ -49,14 +48,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 /**
- * Firebase Authentication instance.
- * - Provides methods and tools for user authentication.
- * 
- * @constant {Auth} auth
- */
-const auth = getAuth(app);
-
-/**
  * Firestore Database instance.
  * - Enables interaction with the Firestore NoSQL cloud database.
  * 
@@ -64,4 +55,4 @@ const auth = getAuth(app);
  */
 const db = getFirestore(app);
 
-export { auth, app, db };
+export { app, db };
