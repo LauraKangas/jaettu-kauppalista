@@ -1,3 +1,5 @@
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../utils/firebase/app';
 /**
  * Handles the addition of a new item to a list. It validates the new item, checks for duplicates, and updates the list in Firestore.
  * 
@@ -51,6 +53,7 @@ export const handleAddItem = async (
     fetchList(); // Refresh the list
     setNewItem(''); // Clear the input field
   } catch (error) {
+    console.log(error);
     enqueueSnackbar('Virhe lisättäessä tuotetta. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
   }
 };
