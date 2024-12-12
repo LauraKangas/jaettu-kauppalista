@@ -124,6 +124,7 @@ form textarea:focus {
 button {
   color:#fff;
   background-color: var(--button-bg-color);
+  border-color: #5f8560;
   border: none;
   cursor: pointer;
   padding: 10px 15px;

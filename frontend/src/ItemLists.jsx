@@ -126,7 +126,7 @@ const ItemLists = () => {
         <TextField
           label="Listan nimi"
           variant="outlined"
-          color="black"
+          color="black" 
           size="small"
           value={newListContent}
           onChange={(e) => setNewListContent(e.target.value)}  
