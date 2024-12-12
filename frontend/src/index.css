@@ -130,6 +130,7 @@ button {
   border-radius: 4px;
   transition: var(--transition);
   -webkit-tap-highlight-color: transparent;
+  
 }
 
 button:hover {

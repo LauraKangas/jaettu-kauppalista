@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Button, Menu, MenuItem, Switch, ListItemText, ListItemIcon, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Button, Menu, MenuItem, Switch, ListItemText, ListItemIcon } from '@mui/material';
+import { ButtonBase } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -79,7 +80,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
       className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
     >
       <Toolbar>
-      <Button onClick={() => navigate('/')}
+      <ButtonBase onClick={() => navigate('/')}
         className="logo-button"
         >
           <img
@@ -92,7 +93,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
               left: '10%',
             }}
           />
-        </Button>
+        </ButtonBase>
 
         <Button
           color="inherit"
