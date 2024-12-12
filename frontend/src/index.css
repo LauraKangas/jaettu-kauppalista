@@ -158,12 +158,12 @@ button:focus {
   color: transparent;
   outline: none;
   box-shadow: none;
-
+  background: transparent;
 }
 .logo-button:hover {
   color: transparent;
   background: transparent;  
-  box-shadow: none;      
+  box-shadow: none;    
 }
 
 .logo-button:active {
