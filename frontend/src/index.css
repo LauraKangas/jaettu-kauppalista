@@ -129,6 +129,7 @@ button {
   padding: 10px 15px;
   border-radius: 4px;
   transition: var(--transition);
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:hover {
@@ -152,6 +153,7 @@ button:focus {
   transition-duration: 0ms;   
   transform: none;    
   display: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .logo-button:focus {
@@ -161,7 +163,7 @@ button:focus {
   background: transparent;
 }
 .logo-button:hover {
-  color: transparent;
+  background-color: #ffffff00;
   background: transparent;  
   box-shadow: none;    
 }

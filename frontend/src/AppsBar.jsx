@@ -79,7 +79,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
       className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
     >
       <Toolbar>
-      <IconButton onClick={() => navigate('/')}
+      <Button onClick={() => navigate('/')}
         className="logo-button"
         >
           <img
@@ -92,7 +92,7 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
               left: '10%',
             }}
           />
-        </IconButton>
+        </Button>
 
         <Button
           color="inherit"
