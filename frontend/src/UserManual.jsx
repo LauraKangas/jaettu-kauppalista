@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 /**
@@ -25,13 +25,13 @@ const UserManual = () => {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <Button onClick={handleNavigateBack} style={{ marginTop: "20px" }}>
         <ArrowBack />
       </Button>
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+      <Typography style={{ textAlign: "center", marginBottom: "20px" }}>
         <h1>Käyttäjäopas</h1>
-      </div>
+      </Typography>
 
       <p>
         Tämä opas auttaa sinua käyttämään sovellusta. Seuraamalla ohjeita voit

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getDocs, collection } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { Button, TextField, Stack, IconButton } from '@mui/material';
+import { Button, TextField, Stack, IconButton, Typography } from '@mui/material';
 import { db } from "./utils/firebase/app";
 import AddIcon from '@mui/icons-material/Add';
 import StarIcon from '@mui/icons-material/Star';
@@ -94,10 +94,10 @@ const ItemLists = () => {
 
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <Typography style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1>Listasi</h1>
         <p>Tervetuloa käyttäjä: <strong>{userPin}</strong></p>
-      </div>
+      </Typography>
 
       <ul>
         {noteItems &&

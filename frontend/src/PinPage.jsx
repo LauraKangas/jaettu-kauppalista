@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from './utils/firebase/app';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import LoginIcon from '@mui/icons-material/Login';
 import Key from '@mui/icons-material/Key';
@@ -55,9 +55,9 @@ const PinPage = () => {
 
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <Typography style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h2>Tervetuloa!</h2>
-    </div>
+    </Typography>
         <p>
             "ListFun tekee arjen listauksista hauskoja ja helppoja!"<br></br>
             Täällä voit luoda, muokata ja jakaa muistilistoja ystävien, perheen tai kämppisten kanssa.<br></br>

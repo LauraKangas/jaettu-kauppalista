@@ -7,6 +7,7 @@ import LogOut from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './index.css';
+
 /**
  * The `AppsBar` component renders a responsive application bar with navigation and theme toggle options.
  * 
@@ -37,12 +38,16 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
    */
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
+    document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = '0px';
   };
   /**
    * Closes the dropdown menu.
    */
   const handleMenuClose = () => {
     setAnchorEl(null);
+    document.body.style.overflow = 'auto'; 
+    document.body.style.paddingRight = '';
   };
   /**
    * Toggles the dark mode state between `true` and `false`.
@@ -74,18 +79,20 @@ const AppsBar = ({ darkMode, setDarkMode }) => {
       className={darkMode ? 'custom-app-bar-dark' : 'custom-app-bar-light'}
     >
       <Toolbar>
-        <img
-          src="/listfun.png" 
-          alt="Listfun Logo"
-          style={{
-            height: 100,
-            width: 280, 
-            position: 'absolute',
-            left: '10%',
-            top: '-15px', 
-
-          }}
-        />
+      <Button onClick={() => navigate('/')}
+        className="logo-button"
+        >
+          <img
+            src="/listfun.png" 
+            alt="Listfun Logo"
+            style={{
+              height: 100,
+              width: 280, 
+              position: 'absolute',
+              left: '10%',
+            }}
+          />
+        </Button>
 
         <Button
           color="inherit"
