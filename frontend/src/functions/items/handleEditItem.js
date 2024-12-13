@@ -76,7 +76,6 @@ export const handleSaveEditedItem = async (
     setEditingItem(null);  // Reset the editing state.
     setEditedItemContent('');  // Clear the content state.
   } catch (error) {
-    console.log(error)
     enqueueSnackbar('Virhe päivittäessä valintaa. Yritä hetken kuluttua uudelleen.', { variant: 'error' });
   }
 };

@@ -111,7 +111,7 @@ const ListView = () => {
     handleEditListName(
       listUpdates.content, 
       setEditedListName, 
-      setIsEditingListName
+      setIsEditingListName,
     );
   };
   /**
@@ -119,9 +119,8 @@ const ListView = () => {
    */
   const cancelEditListName = () => {
     handleCancelEditListName(
-      listUpdates.content, 
       setEditedListName, 
-      setIsEditingListName
+      setIsEditingListName,
     );
   };
   /**
@@ -171,7 +170,7 @@ const ListView = () => {
     handleEditItem(
       itemToEdit, 
       setEditingItem, 
-      setEditedItemContent
+      setEditedItemContent,
     );
   };
   /**
@@ -180,7 +179,7 @@ const ListView = () => {
   const cancelEdit = () => {
     handleCancelEdit(
       setEditingItem, 
-      setEditedItemContent
+      setEditedItemContent,
     );
   };
   /**
@@ -299,7 +298,6 @@ const ListView = () => {
                   size="small"
                   value={editedItemContent}
                   onChange={(e) => setEditedItemContent(e.target.value)}
-                  onBlur={saveEditedItem}
                   onKeyPress={(e) => e.key === 'Enter' && saveEditedItem()}
                 />
               ) : (
