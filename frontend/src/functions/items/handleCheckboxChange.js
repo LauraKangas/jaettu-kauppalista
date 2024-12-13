@@ -1,3 +1,4 @@
+import { doc, updateDoc } from 'firebase/firestore';
 /**
  * Handles the change of a checkbox for an item in the list, updating its checked state in the database.
  * 
