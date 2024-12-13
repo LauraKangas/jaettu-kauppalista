@@ -25,7 +25,7 @@ const UserManual = () => {
   };
 
   return (
-    <div>
+    <div style={{ overflowY: 'scroll' }}>
       <Button onClick={handleNavigateBack} style={{ marginTop: "20px" }}>
         <ArrowBack />
       </Button>

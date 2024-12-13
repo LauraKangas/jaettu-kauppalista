@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from './utils/firebase/app';
 import { useSnackbar } from 'notistack';
 import { Button, TextField, Stack, Typography } from '@mui/material';
@@ -282,14 +282,16 @@ const ListView = () => {
           .sort((a, b) => b.isFavorite - a.isFavorite)
           .map(item => (
             <li key={item.content} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-              <Checkbox
-                color='grey'
-                checked={item.isChecked || false}
-                onChange={() => checkboxChange(item)}
-              />
-              <Button onClick={() => toggleFavorite(item)}>
-                {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
-              </Button>
+              {!editingItem && <>
+                <Checkbox
+                  color='grey'
+                  checked={item.isChecked || false}
+                  onChange={() => checkboxChange(item)}
+                />
+                <Button onClick={() => toggleFavorite(item)}>
+                  {item.isFavorite ? <StarIcon style={{ color: 'gold' }} /> : <StarBorderIcon />}
+                </Button>
+              </>}
               {editingItem && editingItem.content === item.content ? (
                 <TextField
                   variant="outlined"
@@ -322,9 +324,11 @@ const ListView = () => {
                   <Button onClick={cancelEdit}>Peruuta</Button>
                 </>
               )}
-              <Button onClick={() => deleteItem(item)}>
-                <DeleteIcon />
-              </Button>
+              {!editingItem && 
+                <Button onClick={() => deleteItem(item)}>
+                  <DeleteIcon />
+                </Button>
+              }
             </li>
           ))}
       </ul>
